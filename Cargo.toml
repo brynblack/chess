@@ -5,6 +5,6 @@ authors = ["Brynley Llewellyn-Roux", "Aryan Jassal"]
 edition = "2021"
 description = "A Rust implementation of the famous game Chess."
 repository = "https://github.com/brynblack/chess"
-license = "MIT"
+license = "GPL-3.0"
 
 [dependencies]
