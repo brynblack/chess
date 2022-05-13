@@ -1,8 +1,10 @@
 [package]
 name = "chess"
 version = "0.1.0"
+authors = ["Brynley Llewellyn-Roux", "Aryan Jassal"]
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "A Rust implementation of the famous game Chess."
+repository = "https://github.com/brynblack/chess"
+license = "MIT"
 
 [dependencies]
