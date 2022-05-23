@@ -8,3 +8,4 @@ repository = "https://github.com/brynblack/chess"
 license = "GPL-3.0"
 
 [dependencies]
+winit = "0.26.1"
