@@ -99,13 +99,10 @@ impl State {
             });
         }
 
-        // submit will accept anything that implements IntoIter
         self.queue.submit(std::iter::once(encoder.finish()));
         output.present();
 
-        // Ok(())
-
-        todo!()
+        Ok(())
     }
 }
 
@@ -149,6 +146,18 @@ pub async fn run() {
                     _ => {}
                 }
             }
+        }
+        Event::RedrawRequested(window_id) if window_id == window.id() => {
+            state.update();
+            match state.render() {
+                Ok(_) => {}
+                Err(wgpu::SurfaceError::Lost) => state.resize(state.size),
+                Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
+                Err(e) => eprintln!("{:?}", e),
+            }
+        }
+        Event::MainEventsCleared => {
+            window.request_redraw();
         }
         _ => {}
     });
