@@ -1,4 +1,8 @@
-use winit::window::Window;
+use winit::{
+    event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
+    event_loop::{ControlFlow, EventLoop},
+    window::{Window, WindowBuilder},
+};
 
 struct State {
     surface: wgpu::Surface,
@@ -87,9 +91,9 @@ impl State {
                     resolve_target: None,
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: 0.1,
-                            g: 0.2,
-                            b: 0.3,
+                            r: 0.0,
+                            g: 1.0,
+                            b: 0.0,
                             a: 1.0,
                         }),
                         store: true,
@@ -105,12 +109,6 @@ impl State {
         Ok(())
     }
 }
-
-use winit::{
-    event::*,
-    event_loop::{ControlFlow, EventLoop},
-    window::WindowBuilder,
-};
 
 pub async fn run() {
     env_logger::init();
