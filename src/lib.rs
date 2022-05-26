@@ -1,5 +1,5 @@
 use winit::{
-    event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
+    event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent, MouseButton},
     event_loop::{ControlFlow, EventLoop},
     window::{Window, WindowBuilder},
 };
@@ -66,7 +66,7 @@ impl State {
     }
 
     fn input(&mut self, event: &WindowEvent) -> bool {
-        false
+       false
     }
 
     fn update(&mut self) {}
@@ -133,6 +133,11 @@ pub async fn run() {
                                 virtual_keycode: Some(VirtualKeyCode::Escape),
                                 ..
                             },
+                        ..
+                    } => *control_flow = ControlFlow::Exit,
+                    WindowEvent::MouseInput {
+                        button: MouseButton::Left,
+                        state: ElementState::Pressed,
                         ..
                     } => *control_flow = ControlFlow::Exit,
                     WindowEvent::Resized(physical_size) => {
