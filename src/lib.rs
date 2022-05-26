@@ -1,5 +1,5 @@
 use winit::{
-    event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent, MouseButton},
+    event::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     window::{Window, WindowBuilder},
 };
@@ -117,7 +117,7 @@ impl State {
     }
 
     fn input(&mut self, event: &WindowEvent) -> bool {
-       false
+        false
     }
 
     fn update(&mut self) {}
