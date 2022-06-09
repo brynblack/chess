@@ -1,6 +1,6 @@
 [package]
 name = "chess"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Brynley Llewellyn-Roux", "Aryan Jassal"]
 edition = "2021"
 description = "A Rust implementation of the famous game Chess."
@@ -14,3 +14,8 @@ log = "0.4.17"
 wgpu = "0.12"
 pollster = "0.2.5"
 bytemuck = { version = "1.4", features = ["derive"] }
+
+[dependencies.image]
+version = "0.24"
+default-features = false
+features = ["png", "jpeg"]
