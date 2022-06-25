@@ -97,8 +97,8 @@ fn main() {
             Square::Rook,
         ],
     ];
-    move_piece(&Coord(1, 1), &Coord(2, 3), &mut board);
-    println!("{:?}", board)
+    move_piece(&Coord(0, 0), &Coord(1, 0), &mut board);
+    println!("{:?}", &board)
 }
 
 struct Coord(usize, usize);
@@ -118,12 +118,9 @@ fn move_piece(prev_coord: &Coord, new_coord: &Coord, board: &mut[[Square; 8]; 8]
     let square = board[prev_coord.1][prev_coord.0];
     match square {
         Square::Empty => (),
-        Square::Pawn => {
-            if new_coord.1 == prev_coord.1 + 1 {
-                board[prev_coord.1][prev_coord.0] = Square::Empty;
-                board[new_coord.1][new_coord.0] = square;
-            }
+        _ => {
+            board[prev_coord.1][prev_coord.0] = Square::Empty;
+            board[new_coord.1][new_coord.0] = square;
         },
-        _ => (),
     }
 }
