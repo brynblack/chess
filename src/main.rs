@@ -97,13 +97,13 @@ fn main() {
             Square::Rook,
         ],
     ];
-    println!("{:?}", board);
-    assert!(check_if_square_empty(&Coord(5, 5), &board))
+    move_piece(&Coord(1, 1), &Coord(2, 3), &mut board);
+    println!("{:?}", board)
 }
 
-struct Coord(u32, u32);
+struct Coord(usize, usize);
 
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 enum Square {
     Bishop,
     Empty,
@@ -114,18 +114,16 @@ enum Square {
     Queen,
 }
 
-// PROBABLY NOT NEEDED
-fn check_if_square_empty(coord: &Coord, board: &[[Square; 8]; 8]) -> bool {
-    match board[coord.1 as usize][coord.0 as usize] {
-        Square::Empty => true,
-        _ => false,
-    }
-}
-
-// TODO
-fn move_piece(square: &Square) {
+fn move_piece(prev_coord: &Coord, new_coord: &Coord, board: &mut[[Square; 8]; 8]) {
+    let square = board[prev_coord.1][prev_coord.0];
     match square {
-        Square::Pawn => println!("test"),
+        Square::Empty => (),
+        Square::Pawn => {
+            if new_coord.1 == prev_coord.1 + 1 {
+                board[prev_coord.1][prev_coord.0] = Square::Empty;
+                board[new_coord.1][new_coord.0] = square;
+            }
+        },
         _ => (),
     }
 }
