@@ -14,113 +14,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+mod board;
+
+use board::{Board, Coord};
+
 fn main() {
-    let mut board: [[Square; 8]; 8] = [
-        [
-            Square::Rook,
-            Square::Knight,
-            Square::Bishop,
-            Square::Queen,
-            Square::King,
-            Square::Bishop,
-            Square::Knight,
-            Square::Rook,
-        ],
-        [
-            Square::Pawn,
-            Square::Pawn,
-            Square::Pawn,
-            Square::Pawn,
-            Square::Pawn,
-            Square::Pawn,
-            Square::Pawn,
-            Square::Pawn,
-        ],
-        [
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-        ],
-        [
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-        ],
-        [
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-        ],
-        [
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-            Square::Empty,
-        ],
-        [
-            Square::Pawn,
-            Square::Pawn,
-            Square::Pawn,
-            Square::Pawn,
-            Square::Pawn,
-            Square::Pawn,
-            Square::Pawn,
-            Square::Pawn,
-        ],
-        [
-            Square::Rook,
-            Square::Knight,
-            Square::Bishop,
-            Square::Queen,
-            Square::King,
-            Square::Bishop,
-            Square::Knight,
-            Square::Rook,
-        ],
-    ];
-    move_piece(&Coord(0, 0), &Coord(1, 0), &mut board);
-    println!("{:?}", &board)
-}
+    // Create a new board with default layout
+    let mut board = Board::new(Board::default());
 
-struct Coord(usize, usize);
+    // Move a piece
+    board.move_piece(&Coord { x: 0, y: 0 }, &Coord { x: 1, y: 0 });
 
-#[derive(Copy, Clone, Debug)]
-enum Square {
-    Bishop,
-    Empty,
-    King,
-    Knight,
-    Pawn,
-    Rook,
-    Queen,
-}
-
-fn move_piece(prev_coord: &Coord, new_coord: &Coord, board: &mut[[Square; 8]; 8]) {
-    let square = board[prev_coord.1][prev_coord.0];
-    match square {
-        Square::Empty => (),
-        _ => {
-            board[prev_coord.1][prev_coord.0] = Square::Empty;
-            board[new_coord.1][new_coord.0] = square;
-        },
-    }
+    println!("{:?}", &board.layout);
 }
