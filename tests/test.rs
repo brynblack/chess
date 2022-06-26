@@ -1,18 +1,15 @@
-// A structure defining a chess board
-#[derive(PartialEq)]
-pub struct Board {
-    pub layout: [[Square; 8]; 8],
-}
+use chess::{Board, Colour, Coord, Square};
 
-// The implementation for a chess board
-impl Board {
-    // Constructor for a new chess board
-    pub fn new(layout: [[Square; 8]; 8]) -> Board {
-        Board { layout: layout }
-    }
+#[test]
+fn piece_move() {
+    let mut board = Board::new(Board::default());
 
-    // Returns the standard chess board layout
-    pub fn default() -> [[Square; 8]; 8] {
+    board
+        .move_piece(&Coord { x: 0, y: 6 }, &Coord { x: 0, y: 5 })
+        .unwrap_or_else(|err| eprintln!("{}", err));
+
+    assert_eq!(
+        board.layout,
         [
             [
                 Square::Rook(Colour::Black),
@@ -65,7 +62,7 @@ impl Board {
                 Square::Empty,
             ],
             [
-                Square::Empty,
+                Square::Pawn(Colour::White),
                 Square::Empty,
                 Square::Empty,
                 Square::Empty,
@@ -75,7 +72,7 @@ impl Board {
                 Square::Empty,
             ],
             [
-                Square::Pawn(Colour::White),
+                Square::Empty,
                 Square::Pawn(Colour::White),
                 Square::Pawn(Colour::White),
                 Square::Pawn(Colour::White),
@@ -95,44 +92,5 @@ impl Board {
                 Square::Rook(Colour::White),
             ],
         ]
-    }
-
-    // Moves a selected piece to a new position on the chess board
-    // TODO: Implement checks for valid move based on piece type
-    pub fn move_piece(&mut self, prev_coord: &Coord, new_coord: &Coord) -> Result<(), &str> {
-        let square = self.layout[prev_coord.y][prev_coord.x];
-        match square {
-            Square::Empty => Err("Selected square is empty"),
-            _ => {
-                self.layout[prev_coord.y][prev_coord.x] = Square::Empty;
-                self.layout[new_coord.y][new_coord.x] = square;
-                Ok(())
-            }
-        }
-    }
-}
-
-// A structure defining a coordinate on the chess board
-pub struct Coord {
-    pub x: usize,
-    pub y: usize,
-}
-
-// An enum describing the colour of each piece i.e. which player owns it
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum Colour {
-    Black,
-    White,
-}
-
-// An enum defining all the possible states for a square on the chess board
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum Square {
-    Bishop(Colour),
-    Empty,
-    King(Colour),
-    Knight(Colour),
-    Pawn(Colour),
-    Rook(Colour),
-    Queen(Colour),
+    )
 }

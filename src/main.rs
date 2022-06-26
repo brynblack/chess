@@ -14,9 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-mod board;
-
-use board::{Board, Coord};
+use chess::{Board, Coord};
 
 fn main() {
     // Create a new board with default layout
@@ -24,7 +22,7 @@ fn main() {
 
     // Move a piece
     board
-        .move_piece(&Coord { x: 0, y: 0 }, &Coord { x: 1, y: 0 })
+        .move_piece(&Coord { x: 0, y: 6 }, &Coord { x: 0, y: 5 })
         .unwrap_or_else(|err| eprintln!("{}", err));
 
     println!("{:?}", &board.layout);
