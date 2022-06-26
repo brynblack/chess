@@ -23,7 +23,9 @@ fn main() {
     let mut board = Board::new(Board::default());
 
     // Move a piece
-    board.move_piece(&Coord { x: 0, y: 0 }, &Coord { x: 1, y: 0 }).unwrap_or_else(|err| eprintln!("{}", err));
+    board
+        .move_piece(&Coord { x: 0, y: 0 }, &Coord { x: 1, y: 0 })
+        .unwrap_or_else(|err| eprintln!("{}", err));
 
     println!("{:?}", &board.layout);
 }
