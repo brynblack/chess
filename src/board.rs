@@ -134,6 +134,6 @@ pub enum Square {
     King(Colour),
     Knight(Colour),
     Pawn(Colour),
-    Rook(Colour),
     Queen(Colour),
+    Rook(Colour),
 }
