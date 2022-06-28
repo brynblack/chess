@@ -1,6 +1,6 @@
 [package]
 name = "chess"
-version = "0.3.1"
+version = "0.4.1"
 authors = ["Brynley Llewellyn-Roux", "Aryan Jassal"]
 edition = "2021"
 description = "A Rust implementation of the famous game Chess."

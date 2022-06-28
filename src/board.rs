@@ -110,7 +110,7 @@ impl Board {
     // TODO: Implement checks for valid move based on piece type
     pub fn move_piece(&mut self, prev_coord: &Coord, new_coord: &Coord) -> Result<(), &str> {
         if (prev_coord.x | prev_coord.y | new_coord.x | new_coord.y) > self.layout.len() - 1 {
-            return Err("Specified coordinates are out of bounds")
+            return Err("Specified coordinates are out of bounds");
         }
         match self.get_square(prev_coord) {
             Square::Empty => Err("Selected square is empty"),
