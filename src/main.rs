@@ -35,13 +35,13 @@ fn initial_setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
         .move_piece(&Coord { x: 0, y: 6 }, &Coord { x: 0, y: 5 })
         .unwrap_or_else(|err| eprintln!("{}", err));
 
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
-
     let square_size = 60.0;
     let temp_piece_size = 40.0;
 
-    for i in 0..=7 {
-        for j in 0..=7 {
+    // Render the board
+    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+    for i in 0..board.layout.len() {
+        for j in 0..board.layout.len() {
             let square_colour = if (i + j) % 2 == 0 {
                 Color::rgb(0.46, 0.59, 0.34)
             } else {
