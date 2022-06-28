@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use bevy::prelude::*;
-use chess::{Board, Coord};
+use chess::{Board, Coord, Square};
 
 fn main() {
     App::new()
@@ -38,13 +38,14 @@ fn initial_setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
     let square_size = 60.0;
     let temp_piece_size = 40.0;
 
-    for i in 1..=8 {
-        for j in 1..=8 {
+    for i in 0..=7 {
+        for j in 0..=7 {
             let square_colour = if (i + j) % 2 == 0 {
                 Color::rgb(0.46, 0.59, 0.34)
             } else {
                 Color::rgb(0.93, 0.93, 0.82)
             };
+
             commands.spawn_bundle(SpriteBundle {
                 sprite: Sprite {
                     color: square_colour,
@@ -59,19 +60,21 @@ fn initial_setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
                 ..default()
             });
 
-            commands.spawn_bundle(SpriteBundle {
-                sprite: Sprite {
-                    color: Color::rgb(0.0, 0.0, 0.0),
-                    custom_size: Some(Vec2::new(temp_piece_size, temp_piece_size)),
+            if board.layout[j][i] != Square::Empty {
+                commands.spawn_bundle(SpriteBundle {
+                    sprite: Sprite {
+                        color: Color::rgb(0.0, 0.0, 0.0),
+                        custom_size: Some(Vec2::new(temp_piece_size, temp_piece_size)),
+                        ..default()
+                    },
+                    transform: Transform::from_xyz(
+                        square_size * i as f32 - (square_size * 8.0),
+                        square_size * j as f32 - (0.5 * square_size * 8.0),
+                        1.0,
+                    ),
                     ..default()
-                },
-                transform: Transform::from_xyz(
-                    square_size * i as f32 - (square_size * 8.0),
-                    square_size * j as f32 - (0.5 * square_size * 8.0),
-                    1.0,
-                ),
-                ..default()
-            });
+                });
+            }
         }
     }
 }
