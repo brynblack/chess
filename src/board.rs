@@ -99,13 +99,14 @@ impl Board {
 
     // Moves a selected piece to a new position on the chess board
     // TODO: Implement checks for valid move based on piece type
+    // TODO: Fix bug with out of bounds access
     pub fn move_piece(&mut self, prev_coord: &Coord, new_coord: &Coord) -> Result<(), &str> {
-        let square = self.layout[prev_coord.y][prev_coord.x];
-        match square {
+        let target_square = self.layout[prev_coord.y][prev_coord.x];
+        match target_square {
             Square::Empty => Err("Selected square is empty"),
             _ => {
                 self.layout[prev_coord.y][prev_coord.x] = Square::Empty;
-                self.layout[new_coord.y][new_coord.x] = square;
+                self.layout[new_coord.y][new_coord.x] = target_square;
                 Ok(())
             }
         }
@@ -128,8 +129,8 @@ pub enum Colour {
 // An enum defining all the possible states for a square on the chess board
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Square {
-    Bishop(Colour),
     Empty,
+    Bishop(Colour),
     King(Colour),
     Knight(Colour),
     Pawn(Colour),
