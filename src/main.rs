@@ -22,8 +22,10 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_startup_system(initial_setup)
         .run();
+    // Everything after this function call is unreachable!
 }
 
+// This function runs only once on startup
 fn initial_setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
     // Create a new board with default layout
     let mut board = Board::new(Board::default());
