@@ -32,9 +32,9 @@ fn initial_setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
 
     // Move a piece (For testing purposes only)
     board
-        .move_piece(&Coord { x: 0, y: 6 }, &Coord { x: 0, y: 5 })
+        .move_piece(&Coord { x: 0, y: 1 }, &Coord { x: 1, y: 2 })
         .unwrap_or_else(|err| eprintln!("{}", err));
-
+    
     let square_size = 60.0;
     let temp_piece_size = 40.0;
 
@@ -42,9 +42,9 @@ fn initial_setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
     // TODO: Center the board on the screen
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
     for row in 0..board.layout.len() {
-        for square in 0..board.layout.len() {
+        for column in 0..board.layout.len() {
             // Alternate the square colour
-            let square_colour = if (row + square) % 2 == 0 {
+            let square_colour = if (row + column) % 2 == 0 {
                 Color::rgb(0.46, 0.59, 0.34)
             } else {
                 Color::rgb(0.93, 0.93, 0.82)
@@ -59,22 +59,19 @@ fn initial_setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
                 },
                 transform: Transform::from_xyz(
                     square_size * row as f32 - (square_size * 8.0),
-                    square_size * square as f32 - (0.5 * square_size * 8.0),
+                    square_size * column as f32 - (0.5 * square_size * 8.0),
                     0.0,
                 ),
                 ..default()
             });
 
             // Render each chess piece
-            match board.layout[square][row] {
+            match board.get_square(&Coord { x: row, y: column }) {
                 Square::Empty => (),
-                a => {
-                    // Display each piece being rendered (For debugging purposes)
-                    println!("{:?}", a);
-
+                square => {
                     // Render based on piece colour
                     // TODO: Create macro to automate the match
-                    let piece_colour = match a {
+                    let piece_colour = match square {
                         Square::Bishop(Colour::Black)
                         | Square::King(Colour::Black)
                         | Square::Knight(Colour::Black)
@@ -98,7 +95,7 @@ fn initial_setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
                         },
                         transform: Transform::from_xyz(
                             square_size * row as f32 - (square_size * 8.0),
-                            square_size * square as f32 - (0.5 * square_size * 8.0),
+                            square_size * column as f32 - (0.5 * square_size * 8.0),
                             1.0,
                         ),
                         ..default()

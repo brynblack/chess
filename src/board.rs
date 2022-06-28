@@ -4,14 +4,13 @@ pub struct Board {
     pub layout: [[Square; 8]; 8],
 }
 
-// The implementation for a chess board
 impl Board {
-    // Constructor for a new chess board
+    // Returns a new chessboard with specified layout
     pub fn new(layout: [[Square; 8]; 8]) -> Board {
-        Board { layout: layout }
+        Board { layout }
     }
 
-    // Returns the standard chess board layout
+    // Returns standard chessboard layout
     pub fn default() -> [[Square; 8]; 8] {
         [
             [
@@ -97,16 +96,26 @@ impl Board {
         ]
     }
 
+    // Gets the value of a given square
+    // TODO: Fix bug with out of bounds access
+    pub fn get_square(&self, coord: &Coord) -> Square {
+        self.layout[self.layout.len() - 1 - coord.y][coord.x]
+    }
+
+    // Sets the value of a given square
+    // TODO: Fix bug with out of bounds access
+    pub fn set_square(&mut self, coord: &Coord, square: Square) {
+        self.layout[self.layout.len() - 1 - coord.y][coord.x] = square
+    }
+
     // Moves a selected piece to a new position on the chess board
     // TODO: Implement checks for valid move based on piece type
-    // TODO: Fix bug with out of bounds access
     pub fn move_piece(&mut self, prev_coord: &Coord, new_coord: &Coord) -> Result<(), &str> {
-        let target_square = self.layout[prev_coord.y][prev_coord.x];
-        match target_square {
+        match self.get_square(prev_coord) {
             Square::Empty => Err("Selected square is empty"),
-            _ => {
-                self.layout[prev_coord.y][prev_coord.x] = Square::Empty;
-                self.layout[new_coord.y][new_coord.x] = target_square;
+            square => {
+                self.set_square(prev_coord, Square::Empty);
+                self.set_square(new_coord, square);
                 Ok(())
             }
         }
