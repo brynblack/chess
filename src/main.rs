@@ -79,14 +79,12 @@ fn initial_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                         Square::Knight(Colour::Black) => asset_server.load("../assets/bn.png"),
                         Square::Rook(Colour::Black) => asset_server.load("../assets/br.png"),
                         Square::Queen(Colour::Black) => asset_server.load("../assets/bq.png"),
-
                         Square::King(Colour::White) => asset_server.load("../assets/wk.png"),
                         Square::Pawn(Colour::White) => asset_server.load("../assets/wp.png"),
                         Square::Bishop(Colour::White) => asset_server.load("../assets/wb.png"),
                         Square::Knight(Colour::White) => asset_server.load("../assets/wn.png"),
                         Square::Rook(Colour::White) => asset_server.load("../assets/wr.png"),
                         Square::Queen(Colour::White) => asset_server.load("../assets/wq.png"),
-
                         _ => continue,
                     };
 
