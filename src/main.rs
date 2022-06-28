@@ -32,7 +32,7 @@ fn initial_setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
 
     // Move a piece (For testing purposes only)
     board
-        .move_piece(&Coord { x: 0, y: 1 }, &Coord { x: 1, y: 2 })
+        .move_piece(&Coord { x: 0, y: 1 }, &Coord { x: 0, y: 2 })
         .unwrap_or_else(|err| eprintln!("{}", err));
     
     let square_size = 60.0;

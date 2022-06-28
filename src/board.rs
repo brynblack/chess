@@ -96,21 +96,22 @@ impl Board {
         ]
     }
 
-    // Gets the value of a given square
-    // TODO: Fix bug with out of bounds access
-    pub fn get_square(&self, coord: &Coord) -> Square {
-        self.layout[self.layout.len() - 1 - coord.y][coord.x]
+    // Sets the value of a given square
+    fn set_square(&mut self, coord: &Coord, square: Square) {
+        self.layout[self.layout.len() - 1 - coord.y][coord.x] = square;
     }
 
-    // Sets the value of a given square
-    // TODO: Fix bug with out of bounds access
-    pub fn set_square(&mut self, coord: &Coord, square: Square) {
-        self.layout[self.layout.len() - 1 - coord.y][coord.x] = square
+    // Gets the value of a given square
+    pub fn get_square(&self, coord: &Coord) -> Square {
+        self.layout[self.layout.len() - 1 - coord.y][coord.x]
     }
 
     // Moves a selected piece to a new position on the chess board
     // TODO: Implement checks for valid move based on piece type
     pub fn move_piece(&mut self, prev_coord: &Coord, new_coord: &Coord) -> Result<(), &str> {
+        if (prev_coord.x | prev_coord.y | new_coord.x | new_coord.y) > self.layout.len() - 1 {
+            return Err("Specified coordinates are out of bounds")
+        }
         match self.get_square(prev_coord) {
             Square::Empty => Err("Selected square is empty"),
             square => {
