@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use bevy::prelude::*;
-use chess::{Board, Coord, Colour, Square};
+use chess::{Board, Colour, Coord, Square};
 
 fn main() {
     App::new()
@@ -75,9 +75,19 @@ fn initial_setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
                     // Render based on piece colour
                     // TODO: Create macro to automate the match
                     let piece_colour = match a {
-                        Square::Bishop(Colour::Black) | Square::King(Colour::Black) | Square::Knight(Colour::Black) | Square::Pawn(Colour::Black) | Square::Queen(Colour::Black) | Square::Rook(Colour::Black) => Color::rgb(0.0, 0.0, 0.0),
-                        Square::Bishop(Colour::White) | Square::King(Colour::White) | Square::Knight(Colour::White) | Square::Pawn(Colour::White) | Square::Queen(Colour::White) | Square::Rook(Colour::White) => Color::rgb(1.0, 1.0, 1.0),
-                        _ => Color::rgb(0.0, 0.0, 0.0)
+                        Square::Bishop(Colour::Black)
+                        | Square::King(Colour::Black)
+                        | Square::Knight(Colour::Black)
+                        | Square::Pawn(Colour::Black)
+                        | Square::Queen(Colour::Black)
+                        | Square::Rook(Colour::Black) => Color::rgb(0.0, 0.0, 0.0),
+                        Square::Bishop(Colour::White)
+                        | Square::King(Colour::White)
+                        | Square::Knight(Colour::White)
+                        | Square::Pawn(Colour::White)
+                        | Square::Queen(Colour::White)
+                        | Square::Rook(Colour::White) => Color::rgb(1.0, 1.0, 1.0),
+                        _ => Color::rgb(0.0, 0.0, 0.0),
                     };
 
                     commands.spawn_bundle(SpriteBundle {
