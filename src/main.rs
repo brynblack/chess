@@ -14,19 +14,24 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use bevy::prelude::*;
+use bevy::{
+    input::mouse::MouseButtonInput,
+    prelude::*,
+    window::{CursorMoved},
+};
 use chess::{Board, Colour, Coord, Square};
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_startup_system(initial_setup)
+        .add_system(print_mouse_events_system)
         .run();
     // Everything after this function call is unreachable!
 }
 
 // This function runs only once on startup
-fn initial_setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
+fn initial_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // Create a new board with default layout
     let mut board = Board::new(Board::default());
 
@@ -36,7 +41,7 @@ fn initial_setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
         .unwrap_or_else(|err| eprintln!("{}", err));
     
     let square_size = 60.0;
-    let temp_piece_size = 40.0;
+    let temp_piece_size = 0.4;
 
     // Render the board
     // TODO: Center the board on the screen
@@ -71,37 +76,56 @@ fn initial_setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
                 square => {
                     // Render based on piece colour
                     // TODO: Create macro to automate the match
-                    let piece_colour = match square {
-                        Square::Bishop(Colour::Black)
-                        | Square::King(Colour::Black)
-                        | Square::Knight(Colour::Black)
-                        | Square::Pawn(Colour::Black)
-                        | Square::Queen(Colour::Black)
-                        | Square::Rook(Colour::Black) => Color::rgb(0.0, 0.0, 0.0),
-                        Square::Bishop(Colour::White)
-                        | Square::King(Colour::White)
-                        | Square::Knight(Colour::White)
-                        | Square::Pawn(Colour::White)
-                        | Square::Queen(Colour::White)
-                        | Square::Rook(Colour::White) => Color::rgb(1.0, 1.0, 1.0),
-                        _ => Color::rgb(0.0, 0.0, 0.0),
+                    let piece_texture = match square {
+                        Square::King(Colour::Black) => asset_server.load("../assets/bk.png"),
+                        Square::Pawn(Colour::Black) => asset_server.load("../assets/bp.png"),
+                        Square::Bishop(Colour::Black) => asset_server.load("../assets/bb.png"),
+                        Square::Knight(Colour::Black) => asset_server.load("../assets/bn.png"),
+                        Square::Rook(Colour::Black) => asset_server.load("../assets/br.png"),
+                        Square::Queen(Colour::Black) => asset_server.load("../assets/bq.png"),
+
+                        Square::King(Colour::White) => asset_server.load("../assets/wk.png"),
+                        Square::Pawn(Colour::White) => asset_server.load("../assets/wp.png"),
+                        Square::Bishop(Colour::White) => asset_server.load("../assets/wb.png"),
+                        Square::Knight(Colour::White) => asset_server.load("../assets/wn.png"),
+                        Square::Rook(Colour::White) => asset_server.load("../assets/wr.png"),
+                        Square::Queen(Colour::White) => asset_server.load("../assets/wq.png"),
+
+                        _ => continue,
                     };
 
                     commands.spawn_bundle(SpriteBundle {
-                        sprite: Sprite {
-                            color: piece_colour,
-                            custom_size: Some(Vec2::new(temp_piece_size, temp_piece_size)),
-                            ..default()
-                        },
-                        transform: Transform::from_xyz(
-                            square_size * row as f32 - (square_size * 8.0),
-                            square_size * column as f32 - (0.5 * square_size * 8.0),
-                            1.0,
-                        ),
+                        texture: piece_texture,
+                        transform: Transform::from_matrix(Mat4::from_scale_rotation_translation(
+                            Vec3::new(
+                                temp_piece_size,
+                                temp_piece_size,
+                                1.0
+                            ),
+                            Quat::IDENTITY,
+                            Vec3::new(
+                                square_size * row as f32 - (square_size * 8.0),
+                                square_size * column as f32 - (0.5 * square_size * 8.0),
+                                1.0,
+                            )
+                        )),
                         ..default()
                     });
                 }
             }
         }
+    }
+}
+
+fn print_mouse_events_system(
+    mut mouse_button_input_events: EventReader<MouseButtonInput>,
+    mut cursor_moved_events: EventReader<CursorMoved>,
+) {
+    for event in mouse_button_input_events.iter() {
+        info!("{:?}", event);
+    }
+
+    for event in cursor_moved_events.iter() {
+        info!("Mouse location x:{} y:{}", event.position.x, event.position.y);
     }
 }
