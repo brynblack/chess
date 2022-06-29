@@ -37,7 +37,7 @@ fn initial_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         .unwrap_or_else(|err| eprintln!("{}", err));
 
     let square_size = 60.0;
-    let temp_piece_size = 0.4;
+    let piece_size = 60.0;
 
     // Render the board
     // TODO: Center the board on the screen
@@ -89,16 +89,18 @@ fn initial_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                     };
 
                     commands.spawn_bundle(SpriteBundle {
+                        sprite: Sprite {
+                            custom_size: Some(Vec2::new(piece_size, piece_size)),
+                            ..Default::default()
+                        },
                         texture: piece_texture,
-                        transform: Transform::from_matrix(Mat4::from_scale_rotation_translation(
-                            Vec3::new(temp_piece_size, temp_piece_size, 1.0),
-                            Quat::IDENTITY,
+                        transform: Transform::from_translation(
                             Vec3::new(
                                 square_size * row as f32 - (square_size * 8.0),
                                 square_size * column as f32 - (0.5 * square_size * 8.0),
                                 1.0,
                             ),
-                        )),
+                        ),
                         ..default()
                     });
                 }
