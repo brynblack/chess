@@ -1,17 +1,9 @@
-use chess::layouts::Layouts;
-use chess::{Board, Colour, Coord, Square};
+use crate::board::{Colour, Square};
 
-#[test]
-fn piece_move() {
-    let mut board = Board::new(Layouts::standard());
+pub struct Layouts;
 
-    match board.move_piece(&Coord { x: 0, y: 1 }, &Coord { x: 0, y: 2 }) {
-        Ok(_) => (),
-        Err(err) => eprintln!("{}", err),
-    }
-
-    assert_eq!(
-        board.get_layout(),
+impl Layouts {
+    pub fn standard() -> [[Square; 8]; 8] {
         [
             [
                 Square::Rook(Colour::Black),
@@ -64,7 +56,7 @@ fn piece_move() {
                 Square::Empty,
             ],
             [
-                Square::Pawn(Colour::White),
+                Square::Empty,
                 Square::Empty,
                 Square::Empty,
                 Square::Empty,
@@ -74,7 +66,7 @@ fn piece_move() {
                 Square::Empty,
             ],
             [
-                Square::Empty,
+                Square::Pawn(Colour::White),
                 Square::Pawn(Colour::White),
                 Square::Pawn(Colour::White),
                 Square::Pawn(Colour::White),
@@ -94,5 +86,5 @@ fn piece_move() {
                 Square::Rook(Colour::White),
             ],
         ]
-    )
+    }
 }

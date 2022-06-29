@@ -1,5 +1,5 @@
 # chess
-A Rust implementation of the famous game Chess.
+A Rust implementation of the famous game Chess written in Bevy.
 
 ![CodeFactor Grade](https://img.shields.io/codefactor/grade/github/brynblack/chess)
 ![GitHub issues](https://img.shields.io/github/issues/brynblack/chess)

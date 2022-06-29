@@ -15,7 +15,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use bevy::{input::mouse::MouseButtonInput, prelude::*, window::CursorMoved};
-use chess::{Board, Colour, Coord, Square};
+use chess::board::{Board, Colour, Coord, Square};
+use chess::layouts::Layouts;
+
+// Constants
+const SQUARE_SIZE: f32 = 60.0;
+const TEMP_PIECE_SIZE: f32 = 0.4;
 
 fn main() {
     App::new()
@@ -23,55 +28,51 @@ fn main() {
         .add_startup_system(initial_setup)
         .add_system(print_mouse_events_system)
         .run();
-    // Everything after this function call is unreachable!
 }
 
-// This function runs only once on startup
 fn initial_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // Create a new board with default layout
-    let mut board = Board::new(Board::default());
+    let mut board = Board::new(Layouts::standard());
 
     // Move a piece (For testing purposes only)
-    board
-        .move_piece(&Coord { x: 0, y: 1 }, &Coord { x: 0, y: 2 })
-        .unwrap_or_else(|err| eprintln!("{}", err));
+    match board.move_piece(&Coord { x: 0, y: 1 }, &Coord { x: 0, y: 2 }) {
+        Ok(_) => (),
+        Err(err) => eprintln!("{}", err),
+    }
 
-    let square_size = 60.0;
-    let temp_piece_size = 0.4;
+    // Spawn a camera
+    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 
     // Render the board
     // TODO: Center the board on the screen
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
-    for row in 0..board.layout.len() {
-        for column in 0..board.layout.len() {
+    for (index_r, row) in board.get_layout().iter().enumerate() {
+        for (index_s, square) in row.iter().enumerate() {
             // Alternate the square colour
-            let square_colour = if (row + column) % 2 == 0 {
+            let square_colour = if (index_r + index_s) % 2 == 0 {
                 Color::rgb(0.46, 0.59, 0.34)
             } else {
                 Color::rgb(0.93, 0.93, 0.82)
             };
 
-            // Render each square
+            // Render the board
             commands.spawn_bundle(SpriteBundle {
                 sprite: Sprite {
                     color: square_colour,
-                    custom_size: Some(Vec2::new(square_size, square_size)),
+                    custom_size: Some(Vec2::new(SQUARE_SIZE, SQUARE_SIZE)),
                     ..default()
                 },
                 transform: Transform::from_xyz(
-                    square_size * row as f32 - (square_size * 8.0),
-                    square_size * column as f32 - (0.5 * square_size * 8.0),
+                    SQUARE_SIZE * index_r as f32 - (SQUARE_SIZE * 8.0),
+                    SQUARE_SIZE * index_s as f32 - (0.5 * SQUARE_SIZE * 8.0),
                     0.0,
                 ),
                 ..default()
             });
 
             // Render each chess piece
-            match board.get_square(&Coord { x: row, y: column }) {
+            match square {
                 Square::Empty => (),
                 square => {
-                    // Render based on piece colour
-                    // TODO: Create macro to automate the match
                     let piece_texture = match square {
                         Square::King(Colour::Black) => asset_server.load("../assets/bk.png"),
                         Square::Pawn(Colour::Black) => asset_server.load("../assets/bp.png"),
@@ -91,11 +92,11 @@ fn initial_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                     commands.spawn_bundle(SpriteBundle {
                         texture: piece_texture,
                         transform: Transform::from_matrix(Mat4::from_scale_rotation_translation(
-                            Vec3::new(temp_piece_size, temp_piece_size, 1.0),
+                            Vec3::new(TEMP_PIECE_SIZE, TEMP_PIECE_SIZE, 1.0),
                             Quat::IDENTITY,
                             Vec3::new(
-                                square_size * row as f32 - (square_size * 8.0),
-                                square_size * column as f32 - (0.5 * square_size * 8.0),
+                                SQUARE_SIZE * index_r as f32 - (SQUARE_SIZE * 8.0),
+                                SQUARE_SIZE * index_s as f32 - (0.5 * SQUARE_SIZE * 8.0),
                                 1.0,
                             ),
                         )),
