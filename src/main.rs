@@ -20,7 +20,7 @@ use chess::layouts::Layouts;
 
 // Constants
 const SQUARE_SIZE: f32 = 60.0;
-const TEMP_PIECE_SIZE: f32 = 0.4;
+const PIECE_SIZE: f32 = 0.4;
 
 fn main() {
     App::new()
@@ -90,16 +90,18 @@ fn initial_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                     };
 
                     commands.spawn_bundle(SpriteBundle {
+                        sprite: Sprite {
+                            custom_size: Some(Vec2::new(PIECE_SIZE, PIECE_SIZE)),
+                            ..Default::default()
+                        },
                         texture: piece_texture,
-                        transform: Transform::from_matrix(Mat4::from_scale_rotation_translation(
-                            Vec3::new(TEMP_PIECE_SIZE, TEMP_PIECE_SIZE, 1.0),
-                            Quat::IDENTITY,
+                        transform: Transform::from_translation(
                             Vec3::new(
                                 SQUARE_SIZE * index_r as f32 - (SQUARE_SIZE * 8.0),
                                 SQUARE_SIZE * index_s as f32 - (0.5 * SQUARE_SIZE * 8.0),
                                 1.0,
                             ),
-                        )),
+                        ),
                         ..default()
                     });
                 }
