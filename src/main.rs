@@ -14,23 +14,23 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use bevy::{input::mouse::MouseButtonInput, prelude::*, window::CursorMoved};
+// use bevy::{input::mouse::MouseButtonInput, prelude::*, window::CursorMoved};
+use bevy::prelude::*;
 use chess::board::{Board, Colour, Coord, Square};
 use chess::layouts::Layouts;
 
 // Constants
-const SQUARE_SIZE: f32 = 60.0;
-const PIECE_SIZE: f32 = 60.0;
+const PADDING_X: f32 = 20.0;
+const PADDING_Y: f32 = 20.0;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_startup_system(initial_setup)
-        .add_system(print_mouse_events_system)
         .run();
 }
 
-fn initial_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn initial_setup(mut commands: Commands, asset_server: Res<AssetServer>, windows: ResMut<Windows>) {
     // Create a new board with default layout
     let mut board = Board::new(Layouts::standard());
 
@@ -43,8 +43,12 @@ fn initial_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // Spawn a camera
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 
+    // Set the window size dynamically on startup
+    let window = windows.get_primary().unwrap();
+    let square_size = (window.height() - (PADDING_Y * 2.0)) / 8.0;
+    let piece_size = square_size;
+
     // Render the board
-    // TODO: Center the board on the screen
     for (index_r, row) in board.get_layout().iter().enumerate() {
         for (index_s, square) in row.iter().enumerate() {
             // Alternate the square colour
@@ -54,16 +58,20 @@ fn initial_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 Color::rgb(0.93, 0.93, 0.82)
             };
 
+            // Get the transform x and y values for the square and piece
+            let transform_x = square_size * index_r as f32 - (window.width() / 2.0 - (square_size / 2.0) - PADDING_X);
+            let transform_y = square_size * index_s as f32 - (((window.height() - (PADDING_Y * 2.0)) / 2.0) - (square_size / 2.0));
+
             // Render the board
             commands.spawn_bundle(SpriteBundle {
                 sprite: Sprite {
                     color: square_colour,
-                    custom_size: Some(Vec2::new(SQUARE_SIZE, SQUARE_SIZE)),
+                    custom_size: Some(Vec2::new(square_size, square_size)),
                     ..default()
                 },
                 transform: Transform::from_xyz(
-                    SQUARE_SIZE * index_r as f32 - (SQUARE_SIZE * 8.0),
-                    SQUARE_SIZE * index_s as f32 - (0.5 * SQUARE_SIZE * 8.0),
+                    transform_x,
+                    transform_y,
                     0.0,
                 ),
                 ..default()
@@ -91,14 +99,14 @@ fn initial_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
                     commands.spawn_bundle(SpriteBundle {
                         sprite: Sprite {
-                            custom_size: Some(Vec2::new(PIECE_SIZE, PIECE_SIZE)),
+                            custom_size: Some(Vec2::new(piece_size, piece_size)),
                             ..Default::default()
                         },
                         texture: piece_texture,
                         transform: Transform::from_translation(
                             Vec3::new(
-                                SQUARE_SIZE * index_r as f32 - (SQUARE_SIZE * 8.0),
-                                SQUARE_SIZE * index_s as f32 - (0.5 * SQUARE_SIZE * 8.0),
+                                transform_x,
+                                transform_y,
                                 1.0,
                             ),
                         ),
@@ -110,18 +118,23 @@ fn initial_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     }
 }
 
-fn print_mouse_events_system(
-    mut mouse_button_input_events: EventReader<MouseButtonInput>,
-    mut cursor_moved_events: EventReader<CursorMoved>,
-) {
-    for event in mouse_button_input_events.iter() {
-        info!("{:?}", event);
-    }
+// fn print_mouse_events_system(
+//     mut mouse_button_input_events: EventReader<MouseButtonInput>,
+//     mut cursor_moved_events: EventReader<CursorMoved>,
+// ) {
+//     for event in mouse_button_input_events.iter() {
+//         info!("{:?}", event);
+//     }
 
-    for event in cursor_moved_events.iter() {
-        info!(
-            "Mouse location x:{} y:{}",
-            event.position.x, event.position.y
-        );
-    }
-}
+//     for event in cursor_moved_events.iter() {
+//         info!(
+//             "Mouse location x:{} y:{}",
+//             event.position.x, event.position.y
+//         );
+//     }
+// }
+
+// fn print_window_dimensions_system(windows: ResMut<Windows>) {
+//     let window = windows.get_primary().unwrap();
+//     info!("Window size: {}x{}", window.width(), window.height());
+// }
