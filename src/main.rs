@@ -20,7 +20,7 @@ use chess::layouts::Layouts;
 
 // Constants
 const SQUARE_SIZE: f32 = 60.0;
-const PIECE_SIZE: f32 = 0.4;
+const PIECE_SIZE: f32 = 60.0;
 
 fn main() {
     App::new()
