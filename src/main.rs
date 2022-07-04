@@ -20,8 +20,8 @@ use chess::board::{Board, Colour, Coord, Square};
 use chess::layouts::Layouts;
 
 // Constants
-const PADDING_X: f32 = 20.0;
-const PADDING_Y: f32 = 20.0;
+const PADDING_X: f32 = 10.0;
+const PADDING_Y: f32 = 10.0;
 
 fn main() {
     App::new()
@@ -59,8 +59,10 @@ fn initial_setup(mut commands: Commands, asset_server: Res<AssetServer>, windows
             };
 
             // Get the transform x and y values for the square and piece
-            let transform_x = square_size * index_r as f32 - (window.width() / 2.0 - (square_size / 2.0) - PADDING_X);
-            let transform_y = square_size * index_s as f32 - (((window.height() - (PADDING_Y * 2.0)) / 2.0) - (square_size / 2.0));
+            let transform_x = square_size * index_s as f32 - (((window.width() - (PADDING_X * 2.0)) / 2.0) - (square_size / 2.0));
+            let transform_y = square_size * -(index_r as i32) as f32 + (((window.height() - (PADDING_Y * 2.0)) / 2.0) - (square_size / 2.0));
+            // This line is to flip the chess board so black is at the bottom
+            // let transform_y = square_size * index_r as f32 - (((window.height() - (PADDING_Y * 2.0)) / 2.0) - (square_size / 2.0));
 
             // Render the board
             commands.spawn_bundle(SpriteBundle {
@@ -100,15 +102,13 @@ fn initial_setup(mut commands: Commands, asset_server: Res<AssetServer>, windows
                     commands.spawn_bundle(SpriteBundle {
                         sprite: Sprite {
                             custom_size: Some(Vec2::new(piece_size, piece_size)),
-                            ..Default::default()
+                            ..default()
                         },
                         texture: piece_texture,
-                        transform: Transform::from_translation(
-                            Vec3::new(
-                                transform_x,
-                                transform_y,
-                                1.0,
-                            ),
+                        transform: Transform::from_xyz(
+                            transform_x,
+                            transform_y,
+                            1.0,
                         ),
                         ..default()
                     });
@@ -132,9 +132,4 @@ fn initial_setup(mut commands: Commands, asset_server: Res<AssetServer>, windows
 //             event.position.x, event.position.y
 //         );
 //     }
-// }
-
-// fn print_window_dimensions_system(windows: ResMut<Windows>) {
-//     let window = windows.get_primary().unwrap();
-//     info!("Window size: {}x{}", window.width(), window.height());
 // }
