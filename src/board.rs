@@ -1,3 +1,5 @@
+use bevy::prelude::*;
+
 use std::mem;
 
 const BOARD_SIZE: usize = 8;
@@ -8,7 +10,7 @@ pub enum Colour {
     White,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Component, Debug, PartialEq)]
 pub enum Square {
     Empty,
     Bishop(Colour),
@@ -19,7 +21,7 @@ pub enum Square {
     Rook(Colour),
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Component, Copy)]
 pub struct Board {
     layout: [[Square; BOARD_SIZE]; BOARD_SIZE],
 }
@@ -48,6 +50,7 @@ impl Board {
     }
 }
 
+#[derive(Component)]
 pub struct Coord {
     pub x: usize,
     pub y: usize,
