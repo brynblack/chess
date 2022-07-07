@@ -14,122 +14,202 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// use bevy::{input::mouse::MouseButtonInput, prelude::*, window::CursorMoved};
-use bevy::prelude::*;
-use chess::board::{Board, Colour, Coord, Square};
+use bevy::{prelude::*, sprite::MaterialMesh2dBundle, window::WindowMode, input::mouse::MouseButtonInput};
+use chess::board::{Board, Colour, Position, Square};
 use chess::layouts::Layouts;
 
-// Constants
-const PADDING_X: f32 = 10.0;
-const PADDING_Y: f32 = 10.0;
+const LIGHT_COLOUR: Color = Color::rgb(0.93, 0.93, 0.82);
+const DARK_COLOUR: Color = Color::rgb(0.46, 0.59, 0.34);
+const SQUARE_SIZE: f32 = 64.;
+
+struct GameState {
+    board: Board,
+    player: Colour,
+}
+
+#[derive(Default, Component)]
+struct CursorState {
+    pos: Vec2,
+    piece: Option<(Entity, Vec3)>,
+}
+
+#[derive(Bundle, Component)]
+struct SquareComp {
+    pos: Position,
+}
+
+#[derive(Bundle, Component)]
+struct PieceComp {
+    pos: Position,
+    piece_type: Square,
+}
+
+impl Default for GameState {
+    fn default() -> GameState {
+        GameState {
+            board: Board::new(Layouts::standard()),
+            player: Colour::White,
+        }
+    }
+}
 
 fn main() {
     App::new()
+        .insert_resource(WindowDescriptor {
+            title: "Chess".to_string(),
+            mode: WindowMode::Fullscreen,
+            ..Default::default()
+        })
+        .init_resource::<GameState>()
         .add_plugins(DefaultPlugins)
-        .add_startup_system(initial_setup)
+        .add_startup_system(setup)
+        .add_system(drag_and_drop)
         .run();
 }
 
-fn initial_setup(mut commands: Commands, asset_server: Res<AssetServer>, windows: ResMut<Windows>) {
-    // Create a new board with default layout
-    let mut board = Board::new(Layouts::standard());
-
-    // Move a piece (For testing purposes only)
-    match board.move_piece(&Coord { x: 0, y: 1 }, &Coord { x: 0, y: 2 }) {
-        Ok(_) => (),
-        Err(err) => eprintln!("{}", err),
-    }
-
-    // Spawn a camera
+fn setup(
+    mut commands: Commands,
+    game_state: Res<GameState>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    asset_server: Res<AssetServer>,
+) {
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 
-    // Set the window size dynamically on startup
-    let window = windows.get_primary().unwrap();
-    let square_size = (window.height() - (PADDING_Y * 2.0)) / 8.0;
-    let piece_size = square_size;
+    for (y, rank) in game_state.board.get_layout().iter().rev().enumerate() {
+        for (x, square) in rank.iter().enumerate() {
+            commands
+                .spawn_bundle(MaterialMesh2dBundle {
+                    mesh: meshes
+                        .add(Mesh::from(shape::Quad {
+                            size: Vec2::splat(1.),
+                            flip: false,
+                        }))
+                        .into(),
+                    transform: Transform::from_xyz(
+                        x as f32 * SQUARE_SIZE,
+                        y as f32 * SQUARE_SIZE,
+                        0.,
+                    )
+                    .with_scale(Vec3::splat(SQUARE_SIZE)),
+                    material: materials.add(ColorMaterial::from(if (y + x) % 2 == 0 {
+                        DARK_COLOUR
+                    } else {
+                        LIGHT_COLOUR
+                    })),
+                    ..default()
+                })
+                .insert_bundle(SquareComp {
+                    pos: Position { x: x, y: y },
+                });
 
-    // Render the board
-    for (index_r, row) in board.get_layout().iter().enumerate() {
-        for (index_s, square) in row.iter().enumerate() {
-            // Alternate the square colour
-            let square_colour = if (index_r + index_s) % 2 == 0 {
-                Color::rgb(0.46, 0.59, 0.34)
-            } else {
-                Color::rgb(0.93, 0.93, 0.82)
+            let piece_texture = match square {
+                Square::Empty => continue,
+                Square::King(Colour::Black) => asset_server.load("../assets/bk.png"),
+                Square::Pawn(Colour::Black) => asset_server.load("../assets/bp.png"),
+                Square::Bishop(Colour::Black) => asset_server.load("../assets/bb.png"),
+                Square::Knight(Colour::Black) => asset_server.load("../assets/bn.png"),
+                Square::Rook(Colour::Black) => asset_server.load("../assets/br.png"),
+                Square::Queen(Colour::Black) => asset_server.load("../assets/bq.png"),
+                Square::King(Colour::White) => asset_server.load("../assets/wk.png"),
+                Square::Pawn(Colour::White) => asset_server.load("../assets/wp.png"),
+                Square::Bishop(Colour::White) => asset_server.load("../assets/wb.png"),
+                Square::Knight(Colour::White) => asset_server.load("../assets/wn.png"),
+                Square::Rook(Colour::White) => asset_server.load("../assets/wr.png"),
+                Square::Queen(Colour::White) => asset_server.load("../assets/wq.png"),
             };
 
-            // Get the transform x and y values for the square and piece
-            let transform_x = square_size * index_s as f32 - (((window.width() - (PADDING_X * 2.0)) / 2.0) - (square_size / 2.0));
-            let transform_y = square_size * -(index_r as i32) as f32 + (((window.height() - (PADDING_Y * 2.0)) / 2.0) - (square_size / 2.0));
-            // This line is to flip the chess board so black is at the bottom
-            // let transform_y = square_size * index_r as f32 - (((window.height() - (PADDING_Y * 2.0)) / 2.0) - (square_size / 2.0));
-
-            // Render the board
-            commands.spawn_bundle(SpriteBundle {
-                sprite: Sprite {
-                    color: square_colour,
-                    custom_size: Some(Vec2::new(square_size, square_size)),
+            commands
+                .spawn_bundle(MaterialMesh2dBundle {
+                    mesh: meshes
+                        .add(Mesh::from(shape::Quad {
+                            size: Vec2::splat(1.),
+                            flip: false,
+                        }))
+                        .into(),
+                    transform: Transform::from_xyz(
+                        x as f32 * SQUARE_SIZE,
+                        y as f32 * SQUARE_SIZE,
+                        0.,
+                    )
+                    .with_scale(Vec3::splat(SQUARE_SIZE)),
+                    material: materials.add(ColorMaterial::from(piece_texture)),
                     ..default()
-                },
-                transform: Transform::from_xyz(
-                    transform_x,
-                    transform_y,
-                    0.0,
-                ),
-                ..default()
-            });
+                })
+                .insert_bundle(PieceComp {
+                    pos: Position { x: x, y: y },
+                    piece_type: *square,
+                });
+        }
+    }
+}
 
-            // Render each chess piece
-            match square {
-                Square::Empty => (),
-                square => {
-                    let piece_texture = match square {
-                        Square::King(Colour::Black) => asset_server.load("../assets/bk.png"),
-                        Square::Pawn(Colour::Black) => asset_server.load("../assets/bp.png"),
-                        Square::Bishop(Colour::Black) => asset_server.load("../assets/bb.png"),
-                        Square::Knight(Colour::Black) => asset_server.load("../assets/bn.png"),
-                        Square::Rook(Colour::Black) => asset_server.load("../assets/br.png"),
-                        Square::Queen(Colour::Black) => asset_server.load("../assets/bq.png"),
-                        Square::King(Colour::White) => asset_server.load("../assets/wk.png"),
-                        Square::Pawn(Colour::White) => asset_server.load("../assets/wp.png"),
-                        Square::Bishop(Colour::White) => asset_server.load("../assets/wb.png"),
-                        Square::Knight(Colour::White) => asset_server.load("../assets/wn.png"),
-                        Square::Rook(Colour::White) => asset_server.load("../assets/wr.png"),
-                        Square::Queen(Colour::White) => asset_server.load("../assets/wq.png"),
-                        _ => continue,
-                    };
+fn drag_and_drop(
+    mut cursor_state: Local<CursorState>,
+    windows: Res<Windows>,
+    mut mouse_input_event: EventReader<MouseButtonInput>,
+    mut cursor_moved_event: EventReader<CursorMoved>,
+    mouse_button_input: Res<Input<MouseButton>>,
+    query: Query<(&Position, &Square, Entity)>,
+    mut transforms: Query<&mut Transform>,
+) {
+    // Calculate the cursor state relative to the center of the screen.
+    let window = windows.get_primary().unwrap();
+    let mouse_offset = Vec2::new(window.width() / 2.0, window.height() / 2.0);
+    if let Some(cursor_event) = cursor_moved_event.iter().last() {
+            cursor_state.pos = cursor_event.position - mouse_offset;
+        };
 
-                    commands.spawn_bundle(SpriteBundle {
-                        sprite: Sprite {
-                            custom_size: Some(Vec2::new(piece_size, piece_size)),
-                            ..default()
-                        },
-                        texture: piece_texture,
-                        transform: Transform::from_xyz(
-                            transform_x,
-                            transform_y,
-                            1.0,
-                        ),
-                        ..default()
-                    });
-                }
+    // If the mouse was released, this means that the player is no longer dragging a piece,
+    // therefore we set the piece to None.
+    if mouse_button_input.just_released(MouseButton::Left) {
+        let piece = match cursor_state.piece {
+            Some(val) => val,
+            None => {
+                cursor_state.piece = None;
+                return
+            },
+        };
+        let mut piece_pos = transforms.get_mut(piece.0).unwrap();
+        piece_pos.translation.z = 0.;
+        cursor_state.piece = None;
+        return;
+    }
+
+    // If the mouse is currently pressed and there currently exists a piece in the cursor state,
+    // move the piece's position to the cursor.
+    if mouse_button_input.pressed(MouseButton::Left) && cursor_state.piece.is_some() {
+        let piece = cursor_state.piece.unwrap();
+        let mut piece_pos = transforms.get_mut(piece.0).unwrap();
+
+        piece_pos.translation.x = cursor_state.pos.x + piece.1.x;
+        piece_pos.translation.y = cursor_state.pos.y + piece.1.y;
+        piece_pos.translation.z = 1.;
+
+
+        for (position, square, entity) in query.iter() {
+            println!("{:?} {:?} {:?} {:?}", position, square, cursor_state.pos, entity);
+        }
+    }
+
+    // If the mouse was just pressed, calculate which piece is on the mouse and set the cursor
+    // state's piece to that piece.
+    if mouse_button_input.just_pressed(MouseButton::Left) {
+        for (position, square, entity) in query.iter() {
+            let piece_pos = transforms.get_mut(entity).unwrap().translation;
+            let piece_size = transforms.get_mut(entity).unwrap().scale;
+            let diff = cursor_to_piece_diff(&cursor_state.pos, &piece_pos);
+            if diff.length() < (piece_size.x / 2.0) {
+                cursor_state.piece = Some((entity, diff));
             }
         }
     }
 }
 
-// fn print_mouse_events_system(
-//     mut mouse_button_input_events: EventReader<MouseButtonInput>,
-//     mut cursor_moved_events: EventReader<CursorMoved>,
-// ) {
-//     for event in mouse_button_input_events.iter() {
-//         info!("{:?}", event);
-//     }
-
-//     for event in cursor_moved_events.iter() {
-//         info!(
-//             "Mouse location x:{} y:{}",
-//             event.position.x, event.position.y
-//         );
-//     }
-// }
+fn cursor_to_piece_diff(cursor_pos: &Vec2, piece_pos: &Vec3) -> Vec3 {
+    Vec3::new(
+        piece_pos.x - cursor_pos.x,
+        piece_pos.y - cursor_pos.y,
+        0.0,
+    )
+}

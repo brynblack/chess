@@ -1,11 +1,11 @@
 use chess::layouts::Layouts;
-use chess::{Board, Colour, Coord, Square};
+use chess::{Board, Colour, Position, Square};
 
 #[test]
 fn piece_move() {
     let mut board = Board::new(Layouts::standard());
 
-    match board.move_piece(&Coord { x: 0, y: 1 }, &Coord { x: 0, y: 2 }) {
+    match board.move_piece(&Position { x: 0, y: 1 }, &Position { x: 0, y: 2 }) {
         Ok(_) => (),
         Err(err) => eprintln!("{}", err),
     }
