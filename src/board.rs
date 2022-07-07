@@ -9,13 +9,13 @@ pub struct Position {
     pub y: usize,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Colour {
     Black,
     White,
 }
 
-#[derive(Clone, Component, Copy, Debug)]
+#[derive(Clone, Component, Copy, Debug, PartialEq)]
 pub enum Square {
     Empty,
     Bishop(Colour),
@@ -26,6 +26,7 @@ pub enum Square {
     Rook(Colour),
 }
 
+#[derive(PartialEq)]
 pub struct Board {
     layout: [[Square; BOARD_SIZE]; BOARD_SIZE],
 }

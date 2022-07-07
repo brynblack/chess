@@ -12,7 +12,7 @@ fn piece_move() {
 
     assert_eq!(
         board.get_layout(),
-        [
+        &[
             [
                 Square::Rook(Colour::Black),
                 Square::Knight(Colour::Black),
