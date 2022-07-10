@@ -178,7 +178,7 @@ fn update_dimensions(
             // Update the size of the entity
             let mut transform = transforms.get_mut(entity).unwrap();
             transform.scale = Vec3::splat(size);
-            
+
             // Evaluate the correct z-index for the type of entity
             let z_index = match piece_types.get(entity) {
                 Ok(_) => 1.0,
@@ -190,7 +190,7 @@ fn update_dimensions(
             transform.translation = Vec3::new(
                 position.x as f32 * size - event.width / 2.0 + (size / 2.0),
                 position.y as f32 * size - event.height / 2.0 + (size / 2.0),
-                z_index
+                z_index,
             )
         }
     }
@@ -256,18 +256,25 @@ fn drag_and_drop(
             let piece_size = transforms.get(piece.0).unwrap().scale;
             let mut piece_pos = transforms.get_mut(piece.0).unwrap();
 
-            let window = windows.get_primary().unwrap();
-
-            if let Err(err) = game_state
+            match game_state
                 .board
                 .move_piece(piece_coord, closest_square_coord)
             {
-                eprintln!("{}", err);
-                piece_pos.translation.x = piece_coord.x as f32 * piece_size.x;
-                piece_pos.translation.y = piece_coord.y as f32 * piece_size.y;
-            } else {
-                piece_pos.translation.x = closest_square_coord.x as f32 * piece_size.x - window.width() / 2.0 + (piece_size.x / 2.0);
-                piece_pos.translation.y = closest_square_coord.y as f32 * piece_size.y - window.height() / 2.0 + (piece_size.y / 2.0);
+                Ok(_) => {
+                    // Update the translation of the piece
+                    let window = windows.get_primary().unwrap();
+                    piece_pos.translation.x = closest_square_coord.x as f32 * piece_size.x
+                        - window.width() / 2.0
+                        + (piece_size.x / 2.0);
+                    piece_pos.translation.y = closest_square_coord.y as f32 * piece_size.y
+                        - window.height() / 2.0
+                        + (piece_size.y / 2.0);
+                }
+                Err(err) => {
+                    eprintln!("{}", err);
+                    piece_pos.translation.x = piece_coord.x as f32 * piece_size.x;
+                    piece_pos.translation.y = piece_coord.y as f32 * piece_size.y;
+                }
             }
 
             cursor_state.piece = None;

@@ -4,9 +4,8 @@ use chess::board::{Board, Colour, Position, Square};
 fn piece_move() {
     let mut board = Board::default();
 
-    match board.move_piece(&Position { x: 0, y: 1 }, &Position { x: 0, y: 2 }) {
-        Ok(_) => (),
-        Err(err) => eprintln!("{}", err),
+    if let Err(err) = board.move_piece(&Position { x: 0, y: 1 }, &Position { x: 0, y: 2 }) {
+        eprintln!("{}", err)
     }
 
     assert_eq!(
