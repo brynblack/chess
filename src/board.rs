@@ -1,7 +1,6 @@
-use std::mem;
+use crate::layouts::Layouts;
 use bevy::prelude::Component;
-
-const BOARD_SIZE: usize = 8;
+use std::mem;
 
 #[derive(Component, Debug)]
 pub struct Position {
@@ -28,27 +27,41 @@ pub enum Square {
 
 #[derive(PartialEq)]
 pub struct Board {
-    layout: [[Square; BOARD_SIZE]; BOARD_SIZE],
+    layout: Vec<Vec<Square>>,
+}
+
+impl Default for Board {
+    fn default() -> Self {
+        Self {
+            layout: Layouts::standard(),
+        }
+    }
 }
 
 impl Board {
-    pub fn new(layout: [[Square; BOARD_SIZE]; BOARD_SIZE]) -> Board {
-        Board { layout }
+    pub fn new(layout: Vec<Vec<Square>>) -> Self {
+        Self { layout }
     }
 
-    pub fn get_layout(&self) -> &[[Square; BOARD_SIZE]; BOARD_SIZE] {
+    pub fn get_layout(&self) -> &Vec<Vec<Square>> {
         &self.layout
     }
 
     pub fn move_piece(&mut self, old_pos: &Position, new_pos: &Position) -> Result<(), &str> {
-        if ((old_pos.x | new_pos.x) > BOARD_SIZE - 1) | ((old_pos.y | new_pos.y) > BOARD_SIZE - 1) {
-            return Err("Coordinates entered are out of bounds!");
+        if self.layout.get(old_pos.y).is_none() {
+            return Err("Error: Origin square is out of bounds!");
         }
-        let square = mem::replace(
-            &mut self.layout[BOARD_SIZE - 1 - old_pos.y][old_pos.x],
-            Square::Empty,
-        );
-        self.layout[BOARD_SIZE - 1 - new_pos.y][new_pos.x] = square;
+        if self.layout[old_pos.y].get(old_pos.x).is_none() {
+            return Err("Error: Origin square is out of bounds!");
+        }
+        if self.layout.get(new_pos.y).is_none() {
+            return Err("Error: Destination square is out of bounds!");
+        }
+        if self.layout[new_pos.y].get(new_pos.x).is_none() {
+            return Err("Error: Destination square is out of bounds!");
+        }
+        let moved_piece = mem::replace(&mut self.layout[old_pos.y][old_pos.x], Square::Empty);
+        self.layout[new_pos.y][new_pos.x] = moved_piece;
         Ok(())
     }
 }

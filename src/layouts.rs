@@ -3,9 +3,9 @@ use crate::board::{Colour, Square};
 pub struct Layouts;
 
 impl Layouts {
-    pub fn standard() -> [[Square; 8]; 8] {
-        [
-            [
+    pub fn standard() -> Vec<Vec<Square>> {
+        vec![
+            vec![
                 Square::Rook(Colour::Black),
                 Square::Knight(Colour::Black),
                 Square::Bishop(Colour::Black),
@@ -15,7 +15,7 @@ impl Layouts {
                 Square::Knight(Colour::Black),
                 Square::Rook(Colour::Black),
             ],
-            [
+            vec![
                 Square::Pawn(Colour::Black),
                 Square::Pawn(Colour::Black),
                 Square::Pawn(Colour::Black),
@@ -25,7 +25,7 @@ impl Layouts {
                 Square::Pawn(Colour::Black),
                 Square::Pawn(Colour::Black),
             ],
-            [
+            vec![
                 Square::Empty,
                 Square::Empty,
                 Square::Empty,
@@ -35,7 +35,7 @@ impl Layouts {
                 Square::Empty,
                 Square::Empty,
             ],
-            [
+            vec![
                 Square::Empty,
                 Square::Empty,
                 Square::Empty,
@@ -45,7 +45,7 @@ impl Layouts {
                 Square::Empty,
                 Square::Empty,
             ],
-            [
+            vec![
                 Square::Empty,
                 Square::Empty,
                 Square::Empty,
@@ -55,7 +55,7 @@ impl Layouts {
                 Square::Empty,
                 Square::Empty,
             ],
-            [
+            vec![
                 Square::Empty,
                 Square::Empty,
                 Square::Empty,
@@ -65,7 +65,7 @@ impl Layouts {
                 Square::Empty,
                 Square::Empty,
             ],
-            [
+            vec![
                 Square::Pawn(Colour::White),
                 Square::Pawn(Colour::White),
                 Square::Pawn(Colour::White),
@@ -75,7 +75,7 @@ impl Layouts {
                 Square::Pawn(Colour::White),
                 Square::Pawn(Colour::White),
             ],
-            [
+            vec![
                 Square::Rook(Colour::White),
                 Square::Knight(Colour::White),
                 Square::Bishop(Colour::White),

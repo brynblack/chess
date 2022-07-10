@@ -1,9 +1,8 @@
-use chess::layouts::Layouts;
-use chess::{Board, Colour, Position, Square};
+use chess::board::{Board, Colour, Position, Square};
 
 #[test]
 fn piece_move() {
-    let mut board = Board::new(Layouts::standard());
+    let mut board = Board::default();
 
     match board.move_piece(&Position { x: 0, y: 1 }, &Position { x: 0, y: 2 }) {
         Ok(_) => (),
@@ -12,8 +11,8 @@ fn piece_move() {
 
     assert_eq!(
         board.get_layout(),
-        &[
-            [
+        &vec![
+            vec![
                 Square::Rook(Colour::Black),
                 Square::Knight(Colour::Black),
                 Square::Bishop(Colour::Black),
@@ -23,7 +22,7 @@ fn piece_move() {
                 Square::Knight(Colour::Black),
                 Square::Rook(Colour::Black),
             ],
-            [
+            vec![
                 Square::Pawn(Colour::Black),
                 Square::Pawn(Colour::Black),
                 Square::Pawn(Colour::Black),
@@ -33,7 +32,7 @@ fn piece_move() {
                 Square::Pawn(Colour::Black),
                 Square::Pawn(Colour::Black),
             ],
-            [
+            vec![
                 Square::Empty,
                 Square::Empty,
                 Square::Empty,
@@ -43,7 +42,7 @@ fn piece_move() {
                 Square::Empty,
                 Square::Empty,
             ],
-            [
+            vec![
                 Square::Empty,
                 Square::Empty,
                 Square::Empty,
@@ -53,7 +52,7 @@ fn piece_move() {
                 Square::Empty,
                 Square::Empty,
             ],
-            [
+            vec![
                 Square::Empty,
                 Square::Empty,
                 Square::Empty,
@@ -63,7 +62,7 @@ fn piece_move() {
                 Square::Empty,
                 Square::Empty,
             ],
-            [
+            vec![
                 Square::Pawn(Colour::White),
                 Square::Empty,
                 Square::Empty,
@@ -73,7 +72,7 @@ fn piece_move() {
                 Square::Empty,
                 Square::Empty,
             ],
-            [
+            vec![
                 Square::Empty,
                 Square::Pawn(Colour::White),
                 Square::Pawn(Colour::White),
@@ -83,7 +82,7 @@ fn piece_move() {
                 Square::Pawn(Colour::White),
                 Square::Pawn(Colour::White),
             ],
-            [
+            vec![
                 Square::Rook(Colour::White),
                 Square::Knight(Colour::White),
                 Square::Bishop(Colour::White),

@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle, window::WindowMode, input::mouse::MouseButtonInput};
+use bevy::{prelude::*, sprite::MaterialMesh2dBundle, window::WindowResized};
 use chess::board::{Board, Colour, Position, Square};
 use chess::layouts::Layouts;
 
 const LIGHT_COLOUR: Color = Color::rgb(0.93, 0.93, 0.82);
 const DARK_COLOUR: Color = Color::rgb(0.46, 0.59, 0.34);
-const SQUARE_SIZE: f32 = 64.;
+const SQUARE_SIZE: f32 = 64.0;
 
 struct GameState {
     board: Board,
@@ -29,18 +29,18 @@ struct GameState {
 
 #[derive(Default, Component)]
 struct CursorState {
-    pos: Vec2,
+    position: Vec2,
     piece: Option<(Entity, Vec3)>,
 }
 
 #[derive(Bundle, Component)]
 struct SquareComp {
-    pos: Position,
+    position: Position,
 }
 
 #[derive(Bundle, Component)]
 struct PieceComp {
-    pos: Position,
+    position: Position,
     piece_type: Square,
 }
 
@@ -57,39 +57,44 @@ fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
             title: "Chess".to_string(),
-            mode: WindowMode::Fullscreen,
+            width: 960.,
+            height: 960.,
             ..Default::default()
         })
         .init_resource::<GameState>()
         .add_plugins(DefaultPlugins)
         .add_startup_system(setup)
+        .add_startup_system(spawn_board)
+        .add_startup_system(spawn_pieces)
+        .add_system(update_dimensions)
         .add_system(drag_and_drop)
         .run();
 }
 
-fn setup(
+fn setup(mut commands: Commands) {
+    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+}
+
+fn spawn_board(
     mut commands: Commands,
     game_state: Res<GameState>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    asset_server: Res<AssetServer>,
 ) {
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
-
     for (y, rank) in game_state.board.get_layout().iter().rev().enumerate() {
-        for (x, square) in rank.iter().enumerate() {
+        for (x, _) in rank.iter().enumerate() {
             commands
                 .spawn_bundle(MaterialMesh2dBundle {
                     mesh: meshes
                         .add(Mesh::from(shape::Quad {
-                            size: Vec2::splat(1.),
+                            size: Vec2::splat(1.0),
                             flip: false,
                         }))
                         .into(),
                     transform: Transform::from_xyz(
                         x as f32 * SQUARE_SIZE,
                         y as f32 * SQUARE_SIZE,
-                        0.,
+                        0.0,
                     )
                     .with_scale(Vec3::splat(SQUARE_SIZE)),
                     material: materials.add(ColorMaterial::from(if (y + x) % 2 == 0 {
@@ -100,9 +105,21 @@ fn setup(
                     ..default()
                 })
                 .insert_bundle(SquareComp {
-                    pos: Position { x: x, y: y },
+                    position: Position { x, y },
                 });
+        }
+    }
+}
 
+fn spawn_pieces(
+    mut commands: Commands,
+    game_state: Res<GameState>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    asset_server: Res<AssetServer>,
+) {
+    for (y, rank) in game_state.board.get_layout().iter().rev().enumerate() {
+        for (x, square) in rank.iter().enumerate() {
             let piece_texture = match square {
                 Square::Empty => continue,
                 Square::King(Colour::Black) => asset_server.load("../assets/bk.png"),
@@ -123,93 +140,141 @@ fn setup(
                 .spawn_bundle(MaterialMesh2dBundle {
                     mesh: meshes
                         .add(Mesh::from(shape::Quad {
-                            size: Vec2::splat(1.),
+                            size: Vec2::splat(1.0),
                             flip: false,
                         }))
                         .into(),
                     transform: Transform::from_xyz(
                         x as f32 * SQUARE_SIZE,
                         y as f32 * SQUARE_SIZE,
-                        0.,
+                        1.0,
                     )
                     .with_scale(Vec3::splat(SQUARE_SIZE)),
                     material: materials.add(ColorMaterial::from(piece_texture)),
                     ..default()
                 })
                 .insert_bundle(PieceComp {
-                    pos: Position { x: x, y: y },
+                    position: Position { x, y },
                     piece_type: *square,
                 });
         }
     }
 }
 
-fn drag_and_drop(
-    mut cursor_state: Local<CursorState>,
-    windows: Res<Windows>,
-    mut mouse_input_event: EventReader<MouseButtonInput>,
-    mut cursor_moved_event: EventReader<CursorMoved>,
-    mouse_button_input: Res<Input<MouseButton>>,
-    query: Query<(&Position, &Square, Entity)>,
+fn update_dimensions(
+    mut window_resized_event: EventReader<WindowResized>,
+    game_state: Res<GameState>,
+    entities: Query<Entity, With<Position>>,
     mut transforms: Query<&mut Transform>,
+    piece_types: Query<&Square>,
+    positions: Query<&Position>,
 ) {
-    // Calculate the cursor state relative to the center of the screen.
-    let window = windows.get_primary().unwrap();
-    let mouse_offset = Vec2::new(window.width() / 2.0, window.height() / 2.0);
-    if let Some(cursor_event) = cursor_moved_event.iter().last() {
-            cursor_state.pos = cursor_event.position - mouse_offset;
-        };
+    for event in window_resized_event.iter() {
+        // Calculate new piece and square size, then calculate the centre of the window
+        let size = event.height / game_state.board.get_layout().len() as f32;
 
-    // If the mouse was released, this means that the player is no longer dragging a piece,
-    // therefore we set the piece to None.
-    if mouse_button_input.just_released(MouseButton::Left) {
-        let piece = match cursor_state.piece {
-            Some(val) => val,
-            None => {
-                cursor_state.piece = None;
-                return
-            },
-        };
-        let mut piece_pos = transforms.get_mut(piece.0).unwrap();
-        piece_pos.translation.z = 0.;
-        cursor_state.piece = None;
-        return;
+        // Update the size of the squares and pieces and translate them to correct position
+        for entity in entities.iter() {
+            // Update the size of the entity
+            let mut transform = transforms.get_mut(entity).unwrap();
+            transform.scale = Vec3::splat(size);
+            
+            // Evaluate the correct z-index for the type of entity
+            let z_index = match piece_types.get(entity) {
+                Ok(_) => 1.0,
+                Err(_) => 0.0,
+            };
+
+            // Translate the entity to the correct position
+            let position = positions.get(entity).unwrap();
+            transform.translation = Vec3::new(
+                position.x as f32 * size - event.width / 2.0 + (size / 2.0),
+                position.y as f32 * size - event.height / 2.0 + (size / 2.0),
+                z_index
+            )
+        }
     }
+}
 
-    // If the mouse is currently pressed and there currently exists a piece in the cursor state,
-    // move the piece's position to the cursor.
-    if mouse_button_input.pressed(MouseButton::Left) && cursor_state.piece.is_some() {
-        let piece = cursor_state.piece.unwrap();
-        let mut piece_pos = transforms.get_mut(piece.0).unwrap();
+fn drag_and_drop(
+    mut cursor_moved_event: EventReader<CursorMoved>,
+    windows: Res<Windows>,
+    mut cursor_state: Local<CursorState>,
+    mouse_button_input: Res<Input<MouseButton>>,
+    pieces: Query<Entity, (With<Position>, With<Square>)>,
+    squares: Query<Entity, (With<Position>, Without<Square>)>,
+    mut transforms: Query<&mut Transform>,
+    positions: Query<&Position>,
+    mut game_state: ResMut<GameState>,
+) {
+    // If the cursor moves, calculate the position of the cursor relative to the origin of the chessboard
+    if let Some(cursor_event) = cursor_moved_event.iter().last() {
+        let window = windows.get_primary().unwrap();
+        let window_centre = Vec2::new(window.width() / 2.0, window.height() / 2.0);
+        cursor_state.position = cursor_event.position - window_centre;
+    };
 
-        piece_pos.translation.x = cursor_state.pos.x + piece.1.x;
-        piece_pos.translation.y = cursor_state.pos.y + piece.1.y;
-        piece_pos.translation.z = 1.;
-
-
-        for (position, square, entity) in query.iter() {
-            println!("{:?} {:?} {:?} {:?}", position, square, cursor_state.pos, entity);
+    // If the left mouse button is pressed, update the cursor state to contain the closest piece to the cursor
+    if mouse_button_input.just_pressed(MouseButton::Left) {
+        for piece in pieces.iter() {
+            let transform = transforms.get(piece).unwrap();
+            let diff = cursor_to_piece_diff(&cursor_state.position, &transform.translation);
+            if diff.length() < (transform.scale.x / 2.0) {
+                cursor_state.piece = Some((piece, diff));
+            }
         }
     }
 
-    // If the mouse was just pressed, calculate which piece is on the mouse and set the cursor
-    // state's piece to that piece.
-    if mouse_button_input.just_pressed(MouseButton::Left) {
-        for (position, square, entity) in query.iter() {
-            let piece_pos = transforms.get_mut(entity).unwrap().translation;
-            let piece_size = transforms.get_mut(entity).unwrap().scale;
-            let diff = cursor_to_piece_diff(&cursor_state.pos, &piece_pos);
-            if diff.length() < (piece_size.x / 2.0) {
-                cursor_state.piece = Some((entity, diff));
+    if cursor_state.piece.is_some() {
+        if mouse_button_input.pressed(MouseButton::Left) {
+            let piece = cursor_state.piece.unwrap();
+            let mut piece_pos = transforms.get_mut(piece.0).unwrap();
+
+            piece_pos.translation.x = cursor_state.position.x + piece.1.x;
+            piece_pos.translation.y = cursor_state.position.y + piece.1.y;
+        }
+
+        if mouse_button_input.just_released(MouseButton::Left) {
+            let mut closest_square: Option<Entity> = None;
+            for square in squares.iter() {
+                let transform = transforms.get(square).unwrap();
+                let diff = cursor_to_piece_diff(&cursor_state.position, &transform.translation);
+                if diff.length() < (transform.scale.x / 2.0) {
+                    closest_square = Some(square);
+                }
             }
+
+            if closest_square.is_none() {
+                return;
+            }
+
+            let piece = cursor_state.piece.unwrap();
+
+            let piece_coord = positions.get(piece.0).unwrap();
+            let closest_square_coord = positions.get(closest_square.unwrap()).unwrap();
+
+            let piece_size = transforms.get(piece.0).unwrap().scale;
+            let mut piece_pos = transforms.get_mut(piece.0).unwrap();
+
+            let window = windows.get_primary().unwrap();
+
+            if let Err(err) = game_state
+                .board
+                .move_piece(piece_coord, closest_square_coord)
+            {
+                eprintln!("{}", err);
+                piece_pos.translation.x = piece_coord.x as f32 * piece_size.x;
+                piece_pos.translation.y = piece_coord.y as f32 * piece_size.y;
+            } else {
+                piece_pos.translation.x = closest_square_coord.x as f32 * piece_size.x - window.width() / 2.0 + (piece_size.x / 2.0);
+                piece_pos.translation.y = closest_square_coord.y as f32 * piece_size.y - window.height() / 2.0 + (piece_size.y / 2.0);
+            }
+
+            cursor_state.piece = None;
         }
     }
 }
 
 fn cursor_to_piece_diff(cursor_pos: &Vec2, piece_pos: &Vec3) -> Vec3 {
-    Vec3::new(
-        piece_pos.x - cursor_pos.x,
-        piece_pos.y - cursor_pos.y,
-        0.0,
-    )
+    Vec3::new(piece_pos.x - cursor_pos.x, piece_pos.y - cursor_pos.y, 0.0)
 }
