@@ -23,6 +23,7 @@ fn piece_move() {
                 Square::Rook(Colour::Black),
             ],
             vec![
+                Square::Empty,
                 Square::Pawn(Colour::Black),
                 Square::Pawn(Colour::Black),
                 Square::Pawn(Colour::Black),
@@ -30,7 +31,16 @@ fn piece_move() {
                 Square::Pawn(Colour::Black),
                 Square::Pawn(Colour::Black),
                 Square::Pawn(Colour::Black),
+            ],
+            vec![
                 Square::Pawn(Colour::Black),
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
             ],
             vec![
                 Square::Empty,
@@ -64,16 +74,6 @@ fn piece_move() {
             ],
             vec![
                 Square::Pawn(Colour::White),
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-            ],
-            vec![
-                Square::Empty,
                 Square::Pawn(Colour::White),
                 Square::Pawn(Colour::White),
                 Square::Pawn(Colour::White),
