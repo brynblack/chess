@@ -63,6 +63,16 @@ pub enum Square {
     },
 }
 
+impl Square {
+    /// Returns an optional value containing the colour of the piece, if it is a piece.
+    fn get_colour(&self) -> Option<&PieceColour> {
+        match self {
+            Square::Empty => None,
+            Square::Piece { piece_colour, .. } => Some(&piece_colour),
+        }
+    }
+}
+
 /// A struct representing a chessboard.
 pub struct Board {
     layout: BoardLayout,
@@ -123,6 +133,43 @@ impl Board {
 
     /// Checks if a move is valid.
     fn valid_move<'a>(&self, piece_move: &Move) -> Result<(), &'a str> {
+        // Player trying to move out of bounds square
+        if piece_move.old_pos.y > self.layout.len() {
+            return Err("Error: Origin square is out of bounds!");
+        }
+        if piece_move.old_pos.x > self.layout[piece_move.old_pos.y].len() {
+            return Err("Error: Origin square is out of bounds!");
+        }
+        if piece_move.new_pos.y > self.layout.len() {
+            return Err("Error: Destination square is out of bounds!");
+        }
+        if piece_move.new_pos.x > self.layout[piece_move.new_pos.y].len() {
+            return Err("Error: Destination square is out of bounds!");
+        }
+
+        // Player trying to move empty square
+        if self.layout[piece_move.old_pos.y][piece_move.old_pos.x] == Square::Empty {
+            return Err("Error: You cannot move an empty square!");
+        }
+
+        // Player trying to move opponent pieces
+        if &self.player
+            != self.layout[piece_move.old_pos.y][piece_move.old_pos.x]
+                .get_colour()
+                .unwrap()
+        {
+            return Err("Error: You cannot move your opponent's pieces!");
+        }
+
+        // Player trying to destroy their own pieces
+        if let Some(colour) = self.layout[piece_move.new_pos.y][piece_move.new_pos.x].get_colour() {
+            if &self.player == colour {
+                return Err("Error: You cannot capture your own pieces!");
+            }
+        }
+
+        // Valid move checks
+
         Ok(())
     }
 

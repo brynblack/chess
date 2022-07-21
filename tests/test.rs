@@ -5,8 +5,8 @@ fn piece_move() {
     let mut board = Board::default();
 
     if let Err(err) = board.move_piece(Move {
-        old_pos: Position { x: 0, y: 1 },
-        new_pos: Position { x: 0, y: 2 },
+        old_pos: Position { x: 0, y: 6 },
+        new_pos: Position { x: 0, y: 5 },
     }) {
         eprintln!("{}", err)
     }
@@ -49,7 +49,6 @@ fn piece_move() {
                 },
             ],
             vec![
-                Square::Empty,
                 Square::Piece {
                     piece_type: PieceType::Pawn,
                     piece_colour: PieceColour::Black,
@@ -78,19 +77,10 @@ fn piece_move() {
                     piece_type: PieceType::Pawn,
                     piece_colour: PieceColour::Black,
                 },
-            ],
-            vec![
                 Square::Piece {
                     piece_type: PieceType::Pawn,
                     piece_colour: PieceColour::Black,
                 },
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
             ],
             vec![
                 Square::Empty,
@@ -127,6 +117,16 @@ fn piece_move() {
                     piece_type: PieceType::Pawn,
                     piece_colour: PieceColour::White,
                 },
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+            ],
+            vec![
+                Square::Empty,
                 Square::Piece {
                     piece_type: PieceType::Pawn,
                     piece_colour: PieceColour::White,

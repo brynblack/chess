@@ -177,26 +177,7 @@ fn drag_and_drop(
         cursor_state.position = cursor_event.position - window_centre;
     };
 
-    // If the left mouse button is pressed, update the cursor state to contain the closest piece to the cursor
-    if mouse_button_input.just_pressed(MouseButton::Left) {
-        for piece in pieces.iter() {
-            let transform = transforms.get(piece).unwrap();
-            let diff = cursor_to_piece_diff(&cursor_state.position, &transform.translation);
-            if diff.length() < (transform.scale.x / 2.0) {
-                cursor_state.piece = Some((piece, diff));
-            }
-        }
-    }
-
     if cursor_state.piece.is_some() {
-        if mouse_button_input.pressed(MouseButton::Left) {
-            let piece = cursor_state.piece.unwrap();
-            let mut piece_pos = transforms.get_mut(piece.0).unwrap();
-
-            piece_pos.translation.x = cursor_state.position.x + piece.1.x;
-            piece_pos.translation.y = cursor_state.position.y + piece.1.y;
-        }
-
         if mouse_button_input.just_released(MouseButton::Left) {
             let mut closest_square: Option<Entity> = None;
             for square in squares.iter() {
@@ -241,6 +222,27 @@ fn drag_and_drop(
             }
 
             cursor_state.piece = None;
+            return;
+        }
+
+        if mouse_button_input.pressed(MouseButton::Left) {
+            let piece = cursor_state.piece.unwrap();
+            let mut piece_pos = transforms.get_mut(piece.0).unwrap();
+
+            piece_pos.translation.x = cursor_state.position.x + piece.1.x;
+            piece_pos.translation.y = cursor_state.position.y + piece.1.y;
+            return;
+        }
+    }
+
+    // If the left mouse button is pressed, update the cursor state to contain the closest piece to the cursor
+    if mouse_button_input.just_pressed(MouseButton::Left) {
+        for piece in pieces.iter() {
+            let transform = transforms.get(piece).unwrap();
+            let diff = cursor_to_piece_diff(&cursor_state.position, &transform.translation);
+            if diff.length() < (transform.scale.x / 2.0) {
+                cursor_state.piece = Some((piece, diff));
+            }
         }
     }
 }
