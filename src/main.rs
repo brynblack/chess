@@ -15,42 +15,16 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle, window::WindowResized};
-use chess::board::{Board, Colour, Position, Square};
-use chess::layouts::Layouts;
+use chess::board::{Board, Move, PieceColour, PieceType, Position, Square};
 
 const LIGHT_COLOUR: Color = Color::rgb(0.93, 0.93, 0.82);
 const DARK_COLOUR: Color = Color::rgb(0.46, 0.59, 0.34);
 const SQUARE_SIZE: f32 = 64.0;
 
-struct GameState {
-    board: Board,
-    player: Colour,
-}
-
 #[derive(Default, Component)]
 struct CursorState {
     position: Vec2,
     piece: Option<(Entity, Vec3)>,
-}
-
-#[derive(Bundle, Component)]
-struct SquareComp {
-    position: Position,
-}
-
-#[derive(Bundle, Component)]
-struct PieceComp {
-    position: Position,
-    piece_type: Square,
-}
-
-impl Default for GameState {
-    fn default() -> GameState {
-        GameState {
-            board: Board::new(Layouts::standard()),
-            player: Colour::White,
-        }
-    }
 }
 
 fn main() {
@@ -61,28 +35,25 @@ fn main() {
             height: 960.,
             ..Default::default()
         })
-        .init_resource::<GameState>()
+        .init_resource::<Board>()
         .add_plugins(DefaultPlugins)
         .add_startup_system(setup)
-        .add_startup_system(spawn_board)
-        .add_startup_system(spawn_pieces)
         .add_system(update_dimensions)
         .add_system(drag_and_drop)
         .run();
 }
 
-fn setup(mut commands: Commands) {
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
-}
-
-fn spawn_board(
+fn setup(
     mut commands: Commands,
-    game_state: Res<GameState>,
+    board: Res<Board>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    asset_server: Res<AssetServer>,
 ) {
-    for (y, rank) in game_state.board.get_layout().iter().rev().enumerate() {
-        for (x, _) in rank.iter().enumerate() {
+    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+
+    for (y, rank) in board.get_layout().iter().enumerate() {
+        for (x, square) in rank.iter().enumerate() {
             commands
                 .spawn_bundle(MaterialMesh2dBundle {
                     mesh: meshes
@@ -104,36 +75,31 @@ fn spawn_board(
                     })),
                     ..default()
                 })
-                .insert_bundle(SquareComp {
-                    position: Position { x, y },
-                });
-        }
-    }
-}
+                .insert(Position { x, y });
 
-fn spawn_pieces(
-    mut commands: Commands,
-    game_state: Res<GameState>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-    asset_server: Res<AssetServer>,
-) {
-    for (y, rank) in game_state.board.get_layout().iter().rev().enumerate() {
-        for (x, square) in rank.iter().enumerate() {
             let piece_texture = match square {
                 Square::Empty => continue,
-                Square::King(Colour::Black) => asset_server.load("../assets/bk.png"),
-                Square::Pawn(Colour::Black) => asset_server.load("../assets/bp.png"),
-                Square::Bishop(Colour::Black) => asset_server.load("../assets/bb.png"),
-                Square::Knight(Colour::Black) => asset_server.load("../assets/bn.png"),
-                Square::Rook(Colour::Black) => asset_server.load("../assets/br.png"),
-                Square::Queen(Colour::Black) => asset_server.load("../assets/bq.png"),
-                Square::King(Colour::White) => asset_server.load("../assets/wk.png"),
-                Square::Pawn(Colour::White) => asset_server.load("../assets/wp.png"),
-                Square::Bishop(Colour::White) => asset_server.load("../assets/wb.png"),
-                Square::Knight(Colour::White) => asset_server.load("../assets/wn.png"),
-                Square::Rook(Colour::White) => asset_server.load("../assets/wr.png"),
-                Square::Queen(Colour::White) => asset_server.load("../assets/wq.png"),
+                Square::Piece {
+                    piece_type,
+                    piece_colour,
+                } => match piece_colour {
+                    PieceColour::Black => match piece_type {
+                        PieceType::King => asset_server.load("../assets/bk.png"),
+                        PieceType::Pawn => asset_server.load("../assets/bp.png"),
+                        PieceType::Bishop => asset_server.load("../assets/bb.png"),
+                        PieceType::Knight => asset_server.load("../assets/bn.png"),
+                        PieceType::Rook => asset_server.load("../assets/br.png"),
+                        PieceType::Queen => asset_server.load("../assets/bq.png"),
+                    },
+                    PieceColour::White => match piece_type {
+                        PieceType::King => asset_server.load("../assets/wk.png"),
+                        PieceType::Pawn => asset_server.load("../assets/wp.png"),
+                        PieceType::Bishop => asset_server.load("../assets/wb.png"),
+                        PieceType::Knight => asset_server.load("../assets/wn.png"),
+                        PieceType::Rook => asset_server.load("../assets/wr.png"),
+                        PieceType::Queen => asset_server.load("../assets/wq.png"),
+                    },
+                },
             };
 
             commands
@@ -153,17 +119,14 @@ fn spawn_pieces(
                     material: materials.add(ColorMaterial::from(piece_texture)),
                     ..default()
                 })
-                .insert_bundle(PieceComp {
-                    position: Position { x, y },
-                    piece_type: *square,
-                });
+                .insert_bundle((Position { x, y }, *square));
         }
     }
 }
 
 fn update_dimensions(
     mut window_resized_event: EventReader<WindowResized>,
-    game_state: Res<GameState>,
+    board: Res<Board>,
     entities: Query<Entity, With<Position>>,
     mut transforms: Query<&mut Transform>,
     piece_types: Query<&Square>,
@@ -171,7 +134,7 @@ fn update_dimensions(
 ) {
     for event in window_resized_event.iter() {
         // Calculate new piece and square size, then calculate the centre of the window
-        let size = event.height / game_state.board.get_layout().len() as f32;
+        let size = event.height / board.get_layout().len() as f32;
 
         // Update the size of the squares and pieces and translate them to correct position
         for entity in entities.iter() {
@@ -205,7 +168,7 @@ fn drag_and_drop(
     squares: Query<Entity, (With<Position>, Without<Square>)>,
     mut transforms: Query<&mut Transform>,
     positions: Query<&Position>,
-    mut game_state: ResMut<GameState>,
+    mut board: ResMut<Board>,
 ) {
     // If the cursor moves, calculate the position of the cursor relative to the origin of the chessboard
     if let Some(cursor_event) = cursor_moved_event.iter().last() {
@@ -256,10 +219,10 @@ fn drag_and_drop(
             let piece_size = transforms.get(piece.0).unwrap().scale;
             let mut piece_pos = transforms.get_mut(piece.0).unwrap();
 
-            match game_state
-                .board
-                .move_piece(piece_coord, closest_square_coord)
-            {
+            match board.move_piece(Move {
+                old_pos: *piece_coord,
+                new_pos: *closest_square_coord,
+            }) {
                 Ok(_) => {
                     // Update the translation of the piece
                     let window = windows.get_primary().unwrap();

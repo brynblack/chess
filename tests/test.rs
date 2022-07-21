@@ -1,10 +1,13 @@
-use chess::board::{Board, Colour, Position, Square};
+use chess::board::{Board, Move, PieceColour, PieceType, Position, Square};
 
 #[test]
 fn piece_move() {
     let mut board = Board::default();
 
-    if let Err(err) = board.move_piece(&Position { x: 0, y: 1 }, &Position { x: 0, y: 2 }) {
+    if let Err(err) = board.move_piece(Move {
+        old_pos: Position { x: 0, y: 1 },
+        new_pos: Position { x: 0, y: 2 },
+    }) {
         eprintln!("{}", err)
     }
 
@@ -12,57 +15,75 @@ fn piece_move() {
         board.get_layout(),
         &vec![
             vec![
-                Square::Rook(Colour::Black),
-                Square::Knight(Colour::Black),
-                Square::Bishop(Colour::Black),
-                Square::Queen(Colour::Black),
-                Square::King(Colour::Black),
-                Square::Bishop(Colour::Black),
-                Square::Knight(Colour::Black),
-                Square::Rook(Colour::Black),
+                Square::Piece {
+                    piece_type: PieceType::Rook,
+                    piece_colour: PieceColour::Black,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Knight,
+                    piece_colour: PieceColour::Black,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Bishop,
+                    piece_colour: PieceColour::Black,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Queen,
+                    piece_colour: PieceColour::Black,
+                },
+                Square::Piece {
+                    piece_type: PieceType::King,
+                    piece_colour: PieceColour::Black,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Bishop,
+                    piece_colour: PieceColour::Black,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Knight,
+                    piece_colour: PieceColour::Black,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Rook,
+                    piece_colour: PieceColour::Black,
+                },
             ],
             vec![
                 Square::Empty,
-                Square::Pawn(Colour::Black),
-                Square::Pawn(Colour::Black),
-                Square::Pawn(Colour::Black),
-                Square::Pawn(Colour::Black),
-                Square::Pawn(Colour::Black),
-                Square::Pawn(Colour::Black),
-                Square::Pawn(Colour::Black),
+                Square::Piece {
+                    piece_type: PieceType::Pawn,
+                    piece_colour: PieceColour::Black,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Pawn,
+                    piece_colour: PieceColour::Black,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Pawn,
+                    piece_colour: PieceColour::Black,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Pawn,
+                    piece_colour: PieceColour::Black,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Pawn,
+                    piece_colour: PieceColour::Black,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Pawn,
+                    piece_colour: PieceColour::Black,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Pawn,
+                    piece_colour: PieceColour::Black,
+                },
             ],
             vec![
-                Square::Pawn(Colour::Black),
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-            ],
-            vec![
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-            ],
-            vec![
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-            ],
-            vec![
-                Square::Empty,
+                Square::Piece {
+                    piece_type: PieceType::Pawn,
+                    piece_colour: PieceColour::Black,
+                },
                 Square::Empty,
                 Square::Empty,
                 Square::Empty,
@@ -72,24 +93,102 @@ fn piece_move() {
                 Square::Empty,
             ],
             vec![
-                Square::Pawn(Colour::White),
-                Square::Pawn(Colour::White),
-                Square::Pawn(Colour::White),
-                Square::Pawn(Colour::White),
-                Square::Pawn(Colour::White),
-                Square::Pawn(Colour::White),
-                Square::Pawn(Colour::White),
-                Square::Pawn(Colour::White),
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
             ],
             vec![
-                Square::Rook(Colour::White),
-                Square::Knight(Colour::White),
-                Square::Bishop(Colour::White),
-                Square::Queen(Colour::White),
-                Square::King(Colour::White),
-                Square::Bishop(Colour::White),
-                Square::Knight(Colour::White),
-                Square::Rook(Colour::White),
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+            ],
+            vec![
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+            ],
+            vec![
+                Square::Piece {
+                    piece_type: PieceType::Pawn,
+                    piece_colour: PieceColour::White,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Pawn,
+                    piece_colour: PieceColour::White,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Pawn,
+                    piece_colour: PieceColour::White,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Pawn,
+                    piece_colour: PieceColour::White,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Pawn,
+                    piece_colour: PieceColour::White,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Pawn,
+                    piece_colour: PieceColour::White,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Pawn,
+                    piece_colour: PieceColour::White,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Pawn,
+                    piece_colour: PieceColour::White,
+                },
+            ],
+            vec![
+                Square::Piece {
+                    piece_type: PieceType::Rook,
+                    piece_colour: PieceColour::White,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Knight,
+                    piece_colour: PieceColour::White,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Bishop,
+                    piece_colour: PieceColour::White,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Queen,
+                    piece_colour: PieceColour::White,
+                },
+                Square::Piece {
+                    piece_type: PieceType::King,
+                    piece_colour: PieceColour::White,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Bishop,
+                    piece_colour: PieceColour::White,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Knight,
+                    piece_colour: PieceColour::White,
+                },
+                Square::Piece {
+                    piece_type: PieceType::Rook,
+                    piece_colour: PieceColour::White,
+                },
             ],
         ]
     )
