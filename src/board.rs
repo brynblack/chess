@@ -191,6 +191,12 @@ impl Board {
         }
 
         // Valid move checks
+        let piece = self.layout[piece_move.old_pos.y][piece_move.old_pos.x]
+            .get_type()
+            .unwrap();
+
+        // TODO
+        piece.valid_moves();
 
         Ok(())
     }
