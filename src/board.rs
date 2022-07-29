@@ -79,10 +79,18 @@ pub enum Square {
 
 impl Square {
     /// Returns an optional value containing the colour of the piece, if it is a piece.
-    fn get_colour(&self) -> Option<&PieceColour> {
+    pub fn get_colour(&self) -> Option<&PieceColour> {
         match self {
             Square::Empty => None,
             Square::Piece { piece_colour, .. } => Some(&piece_colour),
+        }
+    }
+
+    /// Returns an optional value containing the type of the piece, if it is a piece.
+    pub fn get_type(&self) -> Option<&PieceType> {
+        match self {
+            Square::Empty => None,
+            Square::Piece { piece_type, .. } => Some(&piece_type),
         }
     }
 }
