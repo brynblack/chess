@@ -169,32 +169,28 @@ impl Board {
             return Err("Error: Destination square is out of bounds!");
         }
 
+        let old_square = self.layout[piece_move.old_pos.y][piece_move.old_pos.x];
+        let new_square = self.layout[piece_move.new_pos.y][piece_move.new_pos.x];
+
         // Player trying to move empty square
-        if self.layout[piece_move.old_pos.y][piece_move.old_pos.x] == Square::Empty {
-            return Err("Error: You cannot move an empty square!");
-        }
+        let piece = match old_square.get_type() {
+            Some(piece) => piece,
+            None => return Err("Error: You cannot move an empty square!"),
+        };
 
         // Player trying to move opponent pieces
-        if &self.player
-            != self.layout[piece_move.old_pos.y][piece_move.old_pos.x]
-                .get_colour()
-                .unwrap()
-        {
+        if &self.player != old_square.get_colour().unwrap() {
             return Err("Error: You cannot move your opponent's pieces!");
         }
 
         // Player trying to destroy their own pieces
-        if let Some(colour) = self.layout[piece_move.new_pos.y][piece_move.new_pos.x].get_colour() {
+        if let Some(colour) = new_square.get_colour() {
             if &self.player == colour {
                 return Err("Error: You cannot capture your own pieces!");
             }
         }
 
         // Valid move checks
-        let piece = self.layout[piece_move.old_pos.y][piece_move.old_pos.x]
-            .get_type()
-            .unwrap();
-
         // TODO
         piece.valid_moves();
 
