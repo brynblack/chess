@@ -49,6 +49,20 @@ pub enum PieceType {
     Rook,
 }
 
+impl PieceType {
+    /// Returns the valid moves for the piece.
+    pub fn valid_moves(&self) {
+        match self {
+            PieceType::Bishop => todo!(),
+            PieceType::King => todo!(),
+            PieceType::Knight => todo!(),
+            PieceType::Pawn => todo!(),
+            PieceType::Queen => todo!(),
+            PieceType::Rook => todo!(),
+        }
+    }
+}
+
 /// An enum representing the possible state of a square.
 #[derive(Clone, Copy, Component, Debug, PartialEq)]
 pub enum Square {
