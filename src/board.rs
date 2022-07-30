@@ -137,9 +137,10 @@ impl PieceType {
 /// use chess::board::{PieceColour, PieceType, Square};
 ///
 /// let square = Square::Piece {
+///     piece_colour: PieceColour::Black,
 ///     piece_type: PieceType::Pawn,
-///     piece_colour: PieceColour::Black
 /// };
+///
 /// match square {
 ///     Square::Piece { piece_colour, piece_type } => {
 ///         println!("Colour: {:?}, Type: {:?}", piece_colour, piece_type)
@@ -171,9 +172,10 @@ impl Square {
     /// use chess::board::{PieceColour, PieceType, Square};
     ///
     /// let square = Square::Piece {
+    ///     piece_colour: PieceColour::Black,
     ///     piece_type: PieceType::Pawn,
-    ///     piece_colour: PieceColour::Black
     /// };
+    ///
     /// match square.get_piece() {
     ///     Some(piece) => println!("{:?}", piece),
     ///     None => println!("I'm an empty square!"),
@@ -185,7 +187,7 @@ impl Square {
             Square::Piece {
                 piece_colour,
                 piece_type,
-            } => Some((&piece_colour, &piece_type)),
+            } => Some((piece_colour, piece_type)),
         }
     }
 }
