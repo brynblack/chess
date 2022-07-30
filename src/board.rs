@@ -377,22 +377,16 @@ impl Layouts {
     /// The standard chessboard layout.
     ///
     /// Looks like this:
-    ///
+    /// ```text
     /// R N B K Q B N R
-    ///
     /// P P P P P P P P
-    ///
     /// ~ ~ ~ ~ ~ ~ ~ ~
-    ///
     /// ~ ~ ~ ~ ~ ~ ~ ~
-    ///
     /// ~ ~ ~ ~ ~ ~ ~ ~
-    ///
     /// ~ ~ ~ ~ ~ ~ ~ ~
-    ///
     /// P P P P P P P P
-    ///
     /// R N B K Q B N R
+    /// ```
     pub fn standard() -> BoardLayout {
         vec![
             vec![
