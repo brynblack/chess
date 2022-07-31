@@ -1,3 +1,20 @@
+// Copyright (C) 2022  Brynley Llewellyn-Roux and Aryan Jassal
+//
+// This file is part of chess.
+//
+// chess is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// chess is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 //! A module for the creation and management of a chessboard.
 
 use bevy::prelude::Component;
@@ -75,20 +92,20 @@ pub enum PieceColour {
     White,
 }
 
-/// An enum representing the possible types of a piece.
+/// An enum representing the possible kinds of a piece.
 ///
 /// Contains six variants, all with their own unique set of valid moves.
 ///
 /// # Examples
 ///
 /// ```
-/// use chess::board::PieceType;
+/// use chess::board::PieceKind;
 ///
-/// let piece = PieceType::Bishop;
+/// let piece = PieceKind::Bishop;
 /// println!("{:?}", piece.valid_moves());
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum PieceType {
+pub enum PieceKind {
     /// A Bishop.
     Bishop,
     /// A King.
@@ -103,26 +120,48 @@ pub enum PieceType {
     Rook,
 }
 
-impl PieceType {
+impl PieceKind {
     /// Returns a vector of moves that are valid for the piece.
     ///
     /// # Examples
     ///
     /// ```
-    /// use chess::board::PieceType;
+    /// use chess::board::PieceKind;
     ///
-    /// let piece = PieceType::Pawn;
+    /// let piece = PieceKind::Pawn;
     /// let valid_moves = piece.valid_moves();
     /// println!("{:?}", valid_moves);
     /// ```
     pub fn valid_moves(&self) -> ValidMoves {
         match self {
-            PieceType::Bishop => vec![],
-            PieceType::King => vec![],
-            PieceType::Knight => vec![],
-            PieceType::Pawn => vec![],
-            PieceType::Queen => vec![],
-            PieceType::Rook => vec![],
+            PieceKind::Bishop => todo!(),
+            PieceKind::King => todo!(),
+            PieceKind::Knight => todo!(),
+            PieceKind::Pawn => todo!(),
+            PieceKind::Queen => todo!(),
+            PieceKind::Rook => todo!(),
+        }
+    }
+
+    /// Returns the value of the piece.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use chess::board::PieceKind;
+    ///
+    /// let piece = PieceKind::Pawn;
+    /// let value = piece.value();
+    /// println!("{}", value);
+    /// ```
+    pub fn value(&self) -> u8 {
+        match self {
+            PieceKind::Bishop => 3,
+            PieceKind::King => 0,
+            PieceKind::Knight => 3,
+            PieceKind::Pawn => 1,
+            PieceKind::Queen => 9,
+            PieceKind::Rook => 5,
         }
     }
 }
@@ -134,16 +173,16 @@ impl PieceType {
 /// # Examples
 ///
 /// ```
-/// use chess::board::{PieceColour, PieceType, Square};
+/// use chess::board::{PieceColour, PieceKind, Square};
 ///
 /// let square = Square::Piece {
 ///     piece_colour: PieceColour::Black,
-///     piece_type: PieceType::Pawn,
+///     piece_kind: PieceKind::Pawn,
 /// };
 ///
 /// match square {
-///     Square::Piece { piece_colour, piece_type } => {
-///         println!("Colour: {:?}, Type: {:?}", piece_colour, piece_type)
+///     Square::Piece { piece_colour, piece_kind } => {
+///         println!("Colour: {:?}, Type: {:?}", piece_colour, piece_kind)
 ///     }
 ///     Square::Empty => println!("I'm just a lonely empty square :("),
 /// };
@@ -154,40 +193,61 @@ pub enum Square {
     Empty,
     /// A square with a piece on it.
     ///
-    /// Contains two fields, a `PieceType` and a `PieceColour`.
+    /// Contains two fields, a `PieceColour` and a `PieceKind`.
     Piece {
-        /// The type of the piece.
-        piece_type: PieceType,
         /// The colour of the piece.
         piece_colour: PieceColour,
+        /// The kind of the piece.
+        piece_kind: PieceKind,
     },
 }
 
 impl Square {
-    /// Returns an optional value containing the colour and type of the piece, if it is a piece.
+    /// Returns an optional value containing the colour of the piece, if it is a piece.
     ///
     /// # Examples
     ///
     /// ```
-    /// use chess::board::{PieceColour, PieceType, Square};
+    /// use chess::board::{PieceColour, PieceKind, Square};
     ///
     /// let square = Square::Piece {
     ///     piece_colour: PieceColour::Black,
-    ///     piece_type: PieceType::Pawn,
+    ///     piece_kind: PieceKind::Pawn,
     /// };
     ///
-    /// match square.get_piece() {
+    /// match square.colour() {
     ///     Some(piece) => println!("{:?}", piece),
     ///     None => println!("I'm an empty square!"),
     /// };
     /// ```
-    pub fn get_piece(&self) -> Option<(&PieceColour, &PieceType)> {
+    pub fn colour(&self) -> Option<&PieceColour> {
         match self {
             Square::Empty => None,
-            Square::Piece {
-                piece_colour,
-                piece_type,
-            } => Some((piece_colour, piece_type)),
+            Square::Piece { piece_colour, .. } => Some(piece_colour),
+        }
+    }
+
+    /// Returns an optional value containing the kind of the piece, if it is a piece.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use chess::board::{PieceColour, PieceKind, Square};
+    ///
+    /// let square = Square::Piece {
+    ///     piece_colour: PieceColour::Black,
+    ///     piece_kind: PieceKind::Pawn,
+    /// };
+    ///
+    /// match square.kind() {
+    ///     Some(piece) => println!("{:?}", piece),
+    ///     None => println!("I'm an empty square!"),
+    /// };
+    /// ```
+    pub fn kind(&self) -> Option<&PieceKind> {
+        match self {
+            Square::Empty => None,
+            Square::Piece { piece_kind, .. } => Some(piece_kind),
         }
     }
 }
@@ -205,28 +265,81 @@ impl Square {
 /// ```
 pub struct Board {
     layout: BoardLayout,
-    player: PieceColour,
     move_list: MoveList,
+    player: PieceColour,
 }
 
 impl Default for Board {
     fn default() -> Self {
         Self {
             layout: Layouts::standard(),
-            player: PieceColour::White,
             move_list: vec![],
+            player: PieceColour::White,
         }
     }
 }
 
 impl Board {
-    /// Creates a new chessboard with the given configuration.
-    pub fn new(layout: BoardLayout, player: PieceColour, move_list: MoveList) -> Self {
-        Self {
-            layout,
-            player,
-            move_list,
+    /// Checks if a move is valid.
+    ///
+    /// Takes in a `Move` and returns a result on whether it is valid or not.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use chess::board::{Board, Move, Position};
+    ///
+    /// let board = Board::default();
+    /// let example_move = Move {
+    ///     old_pos: Position { x: 1, y: 5 },
+    ///     new_pos: Position { x: 1, y: 200 },
+    /// };
+    /// match board.check_valid(&example_move) {
+    ///     Ok(_) => (),
+    ///     Err(err) => eprintln!("{}", err),
+    /// };
+    /// ```
+    pub fn check_valid<'a>(&self, piece_move: &Move) -> Result<(), &'a str> {
+        // Player trying to move out of bounds square
+        if piece_move.old_pos.y > self.layout.len() {
+            return Err("Error: Origin square is out of bounds!");
         }
+        if piece_move.old_pos.x > self.layout[piece_move.old_pos.y].len() {
+            return Err("Error: Origin square is out of bounds!");
+        }
+        if piece_move.new_pos.y > self.layout.len() {
+            return Err("Error: Destination square is out of bounds!");
+        }
+        if piece_move.new_pos.x > self.layout[piece_move.new_pos.y].len() {
+            return Err("Error: Destination square is out of bounds!");
+        }
+
+        let old_square = self.layout[piece_move.old_pos.y][piece_move.old_pos.x];
+        let new_square = self.layout[piece_move.new_pos.y][piece_move.new_pos.x];
+
+        // Player trying to move empty square
+        let piece_colour = match old_square.colour() {
+            Some(piece) => piece,
+            None => return Err("Error: You cannot move an empty square!"),
+        };
+
+        // Player trying to move opponent pieces
+        if &self.player != piece_colour {
+            return Err("Error: You cannot move your opponent's pieces!");
+        }
+
+        // Player trying to destroy their own pieces
+        if let Some(colour) = new_square.colour() {
+            if &self.player == colour {
+                return Err("Error: You cannot capture your own pieces!");
+            }
+        }
+
+        // Valid move checks
+        // TODO
+        //piece_kind.valid_moves();
+
+        Ok(())
     }
 
     /// Returns a reference to the board layout.
@@ -237,24 +350,10 @@ impl Board {
     /// use chess::board::Board;
     ///
     /// let board = Board::default();
-    /// println!("{:?}", board.get_layout());
+    /// println!("{:?}", board.layout());
     /// ```
-    pub fn get_layout(&self) -> &BoardLayout {
+    pub fn layout(&self) -> &BoardLayout {
         &self.layout
-    }
-
-    /// Returns a reference to the current player.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use chess::board::Board;
-    ///
-    /// let board = Board::default();
-    /// println!("{:?}", board.get_player());
-    /// ```
-    pub fn get_player(&self) -> &PieceColour {
-        &self.player
     }
 
     /// Returns a reference to the move list.
@@ -265,9 +364,9 @@ impl Board {
     /// use chess::board::Board;
     ///
     /// let board = Board::default();
-    /// println!("{:?}", board.get_move_list());
+    /// println!("{:?}", board.move_list());
     /// ```
-    pub fn get_move_list(&self) -> &MoveList {
+    pub fn move_list(&self) -> &MoveList {
         &self.move_list
     }
 
@@ -288,7 +387,7 @@ impl Board {
     /// }).unwrap_or_else(|err| eprintln!("{}", err));
     /// ```
     pub fn move_piece(&mut self, piece_move: Move) -> Result<(), &str> {
-        if let Err(err) = self.valid_move(&piece_move) {
+        if let Err(err) = self.check_valid(&piece_move) {
             return Err(err);
         }
         let moved_piece = mem::replace(
@@ -301,66 +400,13 @@ impl Board {
         Ok(())
     }
 
-    /// Checks if a move is valid.
-    ///
-    /// Takes in a `Move` and returns a result on whether it is valid or not.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use chess::board::{Board, Move, Position};
-    ///
-    /// let board = Board::default();
-    /// let example_move = Move {
-    ///     old_pos: Position { x: 1, y: 5 },
-    ///     new_pos: Position { x: 1, y: 200 },
-    /// };
-    /// match board.valid_move(&example_move) {
-    ///     Ok(_) => (),
-    ///     Err(err) => eprintln!("{}", err),
-    /// };
-    /// ```
-    pub fn valid_move<'a>(&self, piece_move: &Move) -> Result<(), &'a str> {
-        // Player trying to move out of bounds square
-        if piece_move.old_pos.y > self.layout.len() {
-            return Err("Error: Origin square is out of bounds!");
+    /// Creates a new chessboard with the given configuration.
+    pub fn new(layout: BoardLayout, move_list: MoveList, player: PieceColour) -> Self {
+        Self {
+            layout,
+            move_list,
+            player,
         }
-        if piece_move.old_pos.x > self.layout[piece_move.old_pos.y].len() {
-            return Err("Error: Origin square is out of bounds!");
-        }
-        if piece_move.new_pos.y > self.layout.len() {
-            return Err("Error: Destination square is out of bounds!");
-        }
-        if piece_move.new_pos.x > self.layout[piece_move.new_pos.y].len() {
-            return Err("Error: Destination square is out of bounds!");
-        }
-
-        let old_square = self.layout[piece_move.old_pos.y][piece_move.old_pos.x];
-        let new_square = self.layout[piece_move.new_pos.y][piece_move.new_pos.x];
-
-        // Player trying to move empty square
-        let (piece_colour, piece_type) = match old_square.get_piece() {
-            Some(piece) => piece,
-            None => return Err("Error: You cannot move an empty square!"),
-        };
-
-        // Player trying to move opponent pieces
-        if &self.player != piece_colour {
-            return Err("Error: You cannot move your opponent's pieces!");
-        }
-
-        // Player trying to destroy their own pieces
-        if let Some(piece) = new_square.get_piece() {
-            if &self.player == piece.0 {
-                return Err("Error: You cannot capture your own pieces!");
-            }
-        }
-
-        // Valid move checks
-        // TODO
-        piece_type.valid_moves();
-
-        Ok(())
     }
 
     /// Switches to the next player.
@@ -369,6 +415,20 @@ impl Board {
             PieceColour::White => PieceColour::Black,
             PieceColour::Black => PieceColour::White,
         }
+    }
+
+    /// Returns a reference to the current player.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use chess::board::Board;
+    ///
+    /// let board = Board::default();
+    /// println!("{:?}", board.player());
+    /// ```
+    pub fn player(&self) -> &PieceColour {
+        &self.player
     }
 }
 
@@ -393,81 +453,71 @@ impl Layouts {
         vec![
             vec![
                 Square::Piece {
-                    piece_type: PieceType::Rook,
+                    piece_kind: PieceKind::Rook,
                     piece_colour: PieceColour::Black,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Knight,
+                    piece_kind: PieceKind::Knight,
                     piece_colour: PieceColour::Black,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Bishop,
+                    piece_kind: PieceKind::Bishop,
                     piece_colour: PieceColour::Black,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Queen,
+                    piece_kind: PieceKind::Queen,
                     piece_colour: PieceColour::Black,
                 },
                 Square::Piece {
-                    piece_type: PieceType::King,
+                    piece_kind: PieceKind::King,
                     piece_colour: PieceColour::Black,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Bishop,
+                    piece_kind: PieceKind::Bishop,
                     piece_colour: PieceColour::Black,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Knight,
+                    piece_kind: PieceKind::Knight,
                     piece_colour: PieceColour::Black,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Rook,
+                    piece_kind: PieceKind::Rook,
                     piece_colour: PieceColour::Black,
                 },
             ],
             vec![
                 Square::Piece {
-                    piece_type: PieceType::Pawn,
+                    piece_kind: PieceKind::Pawn,
                     piece_colour: PieceColour::Black,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Pawn,
+                    piece_kind: PieceKind::Pawn,
                     piece_colour: PieceColour::Black,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Pawn,
+                    piece_kind: PieceKind::Pawn,
                     piece_colour: PieceColour::Black,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Pawn,
+                    piece_kind: PieceKind::Pawn,
                     piece_colour: PieceColour::Black,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Pawn,
+                    piece_kind: PieceKind::Pawn,
                     piece_colour: PieceColour::Black,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Pawn,
+                    piece_kind: PieceKind::Pawn,
                     piece_colour: PieceColour::Black,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Pawn,
+                    piece_kind: PieceKind::Pawn,
                     piece_colour: PieceColour::Black,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Pawn,
+                    piece_kind: PieceKind::Pawn,
                     piece_colour: PieceColour::Black,
                 },
-            ],
-            vec![
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
-                Square::Empty,
             ],
             vec![
                 Square::Empty,
@@ -500,70 +550,80 @@ impl Layouts {
                 Square::Empty,
             ],
             vec![
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+                Square::Empty,
+            ],
+            vec![
                 Square::Piece {
-                    piece_type: PieceType::Pawn,
+                    piece_kind: PieceKind::Pawn,
                     piece_colour: PieceColour::White,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Pawn,
+                    piece_kind: PieceKind::Pawn,
                     piece_colour: PieceColour::White,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Pawn,
+                    piece_kind: PieceKind::Pawn,
                     piece_colour: PieceColour::White,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Pawn,
+                    piece_kind: PieceKind::Pawn,
                     piece_colour: PieceColour::White,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Pawn,
+                    piece_kind: PieceKind::Pawn,
                     piece_colour: PieceColour::White,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Pawn,
+                    piece_kind: PieceKind::Pawn,
                     piece_colour: PieceColour::White,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Pawn,
+                    piece_kind: PieceKind::Pawn,
                     piece_colour: PieceColour::White,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Pawn,
+                    piece_kind: PieceKind::Pawn,
                     piece_colour: PieceColour::White,
                 },
             ],
             vec![
                 Square::Piece {
-                    piece_type: PieceType::Rook,
+                    piece_kind: PieceKind::Rook,
                     piece_colour: PieceColour::White,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Knight,
+                    piece_kind: PieceKind::Knight,
                     piece_colour: PieceColour::White,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Bishop,
+                    piece_kind: PieceKind::Bishop,
                     piece_colour: PieceColour::White,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Queen,
+                    piece_kind: PieceKind::Queen,
                     piece_colour: PieceColour::White,
                 },
                 Square::Piece {
-                    piece_type: PieceType::King,
+                    piece_kind: PieceKind::King,
                     piece_colour: PieceColour::White,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Bishop,
+                    piece_kind: PieceKind::Bishop,
                     piece_colour: PieceColour::White,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Knight,
+                    piece_kind: PieceKind::Knight,
                     piece_colour: PieceColour::White,
                 },
                 Square::Piece {
-                    piece_type: PieceType::Rook,
+                    piece_kind: PieceKind::Rook,
                     piece_colour: PieceColour::White,
                 },
             ],

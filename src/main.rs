@@ -1,21 +1,23 @@
 // chess - A Rust implementation of the famous game Chess.
 // Copyright (C) 2022  Brynley Llewellyn-Roux and Aryan Jassal
 //
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
+// This file is part of chess.
+//
+// chess is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// This program is distributed in the hope that it will be useful,
+// chess is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle, window::WindowResized};
-use chess::board::{Board, Move, PieceColour, PieceType, Position, Square};
+use chess::board::{Board, Move, PieceColour, PieceKind, Position, Square};
 
 const LIGHT_COLOUR: Color = Color::rgb(0.93, 0.93, 0.82);
 const DARK_COLOUR: Color = Color::rgb(0.46, 0.59, 0.34);
@@ -50,9 +52,9 @@ fn setup(
     mut materials: ResMut<Assets<ColorMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+    commands.spawn_bundle(Camera2dBundle::default());
 
-    for (y, rank) in board.get_layout().iter().enumerate() {
+    for (y, rank) in board.layout().iter().enumerate() {
         for (x, square) in rank.iter().enumerate() {
             commands
                 .spawn_bundle(MaterialMesh2dBundle {
@@ -80,24 +82,24 @@ fn setup(
             let piece_texture = match square {
                 Square::Empty => continue,
                 Square::Piece {
-                    piece_type,
+                    piece_kind: piece_type,
                     piece_colour,
                 } => match piece_colour {
                     PieceColour::Black => match piece_type {
-                        PieceType::King => asset_server.load("../assets/bk.png"),
-                        PieceType::Pawn => asset_server.load("../assets/bp.png"),
-                        PieceType::Bishop => asset_server.load("../assets/bb.png"),
-                        PieceType::Knight => asset_server.load("../assets/bn.png"),
-                        PieceType::Rook => asset_server.load("../assets/br.png"),
-                        PieceType::Queen => asset_server.load("../assets/bq.png"),
+                        PieceKind::King => asset_server.load("../assets/bk.png"),
+                        PieceKind::Pawn => asset_server.load("../assets/bp.png"),
+                        PieceKind::Bishop => asset_server.load("../assets/bb.png"),
+                        PieceKind::Knight => asset_server.load("../assets/bn.png"),
+                        PieceKind::Rook => asset_server.load("../assets/br.png"),
+                        PieceKind::Queen => asset_server.load("../assets/bq.png"),
                     },
                     PieceColour::White => match piece_type {
-                        PieceType::King => asset_server.load("../assets/wk.png"),
-                        PieceType::Pawn => asset_server.load("../assets/wp.png"),
-                        PieceType::Bishop => asset_server.load("../assets/wb.png"),
-                        PieceType::Knight => asset_server.load("../assets/wn.png"),
-                        PieceType::Rook => asset_server.load("../assets/wr.png"),
-                        PieceType::Queen => asset_server.load("../assets/wq.png"),
+                        PieceKind::King => asset_server.load("../assets/wk.png"),
+                        PieceKind::Pawn => asset_server.load("../assets/wp.png"),
+                        PieceKind::Bishop => asset_server.load("../assets/wb.png"),
+                        PieceKind::Knight => asset_server.load("../assets/wn.png"),
+                        PieceKind::Rook => asset_server.load("../assets/wr.png"),
+                        PieceKind::Queen => asset_server.load("../assets/wq.png"),
                     },
                 },
             };
@@ -134,7 +136,7 @@ fn update_dimensions(
 ) {
     for event in window_resized_event.iter() {
         // Calculate new piece and square size, then calculate the centre of the window
-        let size = event.height / board.get_layout().len() as f32;
+        let size = event.height / board.layout().len() as f32;
 
         // Update the size of the squares and pieces and translate them to correct position
         for entity in entities.iter() {
@@ -167,7 +169,7 @@ fn drag_and_drop(
     pieces: Query<Entity, (With<Position>, With<Square>)>,
     squares: Query<Entity, (With<Position>, Without<Square>)>,
     mut transforms: Query<&mut Transform>,
-    positions: Query<&Position>,
+    mut positions: Query<&mut Position>,
     mut board: ResMut<Board>,
 ) {
     // If the cursor moves, calculate the position of the cursor relative to the origin of the chessboard
@@ -196,6 +198,7 @@ fn drag_and_drop(
 
             let piece_coord = positions.get(piece.0).unwrap();
             let closest_square_coord = positions.get(closest_square.unwrap()).unwrap();
+            let boilerplate = closest_square_coord.clone();
 
             let piece_size = transforms.get(piece.0).unwrap().scale;
             let mut piece_pos = transforms.get_mut(piece.0).unwrap();
@@ -207,17 +210,25 @@ fn drag_and_drop(
                 Ok(_) => {
                     // Update the translation of the piece
                     let window = windows.get_primary().unwrap();
-                    piece_pos.translation.x = closest_square_coord.x as f32 * piece_size.x
+                    let mut piece_coord = positions.get_mut(piece.0).unwrap();
+                    piece_coord.x = boilerplate.x;
+                    piece_coord.y = boilerplate.y;
+                    piece_pos.translation.x = boilerplate.x as f32 * piece_size.x
                         - window.width() / 2.0
                         + (piece_size.x / 2.0);
-                    piece_pos.translation.y = closest_square_coord.y as f32 * piece_size.y
+                    piece_pos.translation.y = boilerplate.y as f32 * piece_size.y
                         - window.height() / 2.0
                         + (piece_size.y / 2.0);
                 }
                 Err(err) => {
                     eprintln!("{}", err);
-                    piece_pos.translation.x = piece_coord.x as f32 * piece_size.x;
-                    piece_pos.translation.y = piece_coord.y as f32 * piece_size.y;
+                    let window = windows.get_primary().unwrap();
+                    piece_pos.translation.x = piece_coord.x as f32 * piece_size.x
+                        - window.width() / 2.0
+                        + (piece_size.x / 2.0);
+                    piece_pos.translation.y = piece_coord.y as f32 * piece_size.y
+                        - window.height() / 2.0
+                        + (piece_size.y / 2.0);
                 }
             }
 
