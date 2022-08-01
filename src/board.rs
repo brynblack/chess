@@ -335,9 +335,8 @@ impl Board {
             }
         }
 
-        // Valid move checks
-        // TODO
-        //piece_kind.valid_moves();
+        // TODO: Valid move checks
+        // piece_kind.valid_moves();
 
         Ok(())
     }
