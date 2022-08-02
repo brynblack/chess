@@ -16,12 +16,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use bevy::{
-    diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin},
-    prelude::*,
-    sprite::MaterialMesh2dBundle,
-    window::{WindowMode, WindowResized},
-};
+use bevy::{prelude::*, sprite::MaterialMesh2dBundle, window::WindowResized};
 use chess::board::{Board, Move, PieceColour, PieceKind, Position, Square};
 
 const LIGHT_COLOUR: Color = Color::rgb(0.93, 0.93, 0.82);
@@ -34,27 +29,19 @@ struct CursorState {
     piece: Option<(Entity, Vec3)>,
 }
 
-#[derive(Component)]
-struct PlayerText;
-
-#[derive(Component)]
-struct FpsText;
-
 fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
             title: "Chess".to_string(),
-            mode: WindowMode::BorderlessFullscreen,
+            width: 960.,
+            height: 960.,
             ..Default::default()
         })
         .init_resource::<Board>()
         .add_plugins(DefaultPlugins)
-        .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_startup_system(setup)
         .add_system(update_dimensions)
         .add_system(drag_and_drop)
-        .add_system(update_player_text)
-        .add_system(update_fps_counter)
         .run();
 }
 
@@ -66,68 +53,6 @@ fn setup(
     asset_server: Res<AssetServer>,
 ) {
     commands.spawn_bundle(Camera2dBundle::default());
-
-    commands
-        .spawn_bundle(
-            TextBundle::from_sections([
-                TextSection::new(
-                    "Current player: ",
-                    TextStyle {
-                        font: asset_server.load("fonts/text.ttf"),
-                        font_size: 16.0,
-                        color: Color::WHITE,
-                    },
-                ),
-                TextSection::from_style(TextStyle {
-                    font: asset_server.load("fonts/text.ttf"),
-                    font_size: 16.0,
-                    color: Color::WHITE,
-                }),
-            ])
-            .with_text_alignment(TextAlignment::TOP_CENTER)
-            .with_style(Style {
-                align_self: AlignSelf::FlexEnd,
-                position_type: PositionType::Absolute,
-                position: UiRect {
-                    bottom: Val::Px(5.0),
-                    right: Val::Px(15.0),
-                    ..default()
-                },
-                ..default()
-            }),
-        )
-        .insert(PlayerText);
-
-    commands
-        .spawn_bundle(
-            TextBundle::from_sections([
-                TextSection::new(
-                    "FPS: ",
-                    TextStyle {
-                        font: asset_server.load("fonts/text.ttf"),
-                        font_size: 16.0,
-                        color: Color::WHITE,
-                    },
-                ),
-                TextSection::from_style(TextStyle {
-                    font: asset_server.load("fonts/text.ttf"),
-                    font_size: 16.0,
-                    color: Color::WHITE,
-                }),
-            ])
-            .with_text_alignment(TextAlignment::TOP_CENTER)
-            .with_style(Style {
-                align_self: AlignSelf::FlexEnd,
-                position_type: PositionType::Absolute,
-                position: UiRect {
-                    bottom: Val::Px(20.0),
-                    right: Val::Px(15.0),
-                    ..default()
-                },
-                ..default()
-            }),
-        )
-        .insert(FpsText);
 
     for (y, rank) in board.layout().iter().enumerate() {
         for (x, square) in rank.iter().enumerate() {
@@ -211,7 +136,13 @@ fn update_dimensions(
 ) {
     for event in window_resized_event.iter() {
         // Calculate new piece and square size, then calculate the centre of the window
-        let size = event.height / board.layout().len() as f32;
+        let w_size = event.width / board.layout().len() as f32;
+        let h_size = event.height / board.layout().len() as f32;
+        let size = w_size.total_cmp(&h_size);
+        let size = match size {
+            std::cmp::Ordering::Greater => h_size,
+            _ => w_size,
+        };
 
         // Update the size of the squares and pieces and translate them to correct position
         for entity in entities.iter() {
@@ -232,22 +163,6 @@ fn update_dimensions(
                 position.y as f32 * size - event.height / 2.0 + (size / 2.0),
                 z_index,
             )
-        }
-    }
-}
-
-fn update_player_text(board: Res<Board>, mut query: Query<&mut Text, With<PlayerText>>) {
-    for mut text in &mut query {
-        text.sections[1].value = format!("{:?}", board.player());
-    }
-}
-
-fn update_fps_counter(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text, With<FpsText>>) {
-    for mut text in &mut query {
-        if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
-            if let Some(average) = fps.average() {
-                text.sections[1].value = format!("{average:.2}");
-            }
         }
     }
 }
