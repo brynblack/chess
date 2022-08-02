@@ -22,7 +22,6 @@ use std::mem;
 
 type BoardLayout = Vec<Vec<Square>>;
 type MoveList = Vec<Move>;
-type ValidMoves = Vec<Move>;
 
 /// A struct representing a position on the chessboard.
 ///
@@ -134,12 +133,27 @@ impl PieceKind {
     /// ```
     pub fn valid_moves(&self) -> ValidMoves {
         match self {
-            PieceKind::Bishop => todo!(),
-            PieceKind::King => todo!(),
-            PieceKind::Knight => todo!(),
-            PieceKind::Pawn => todo!(),
-            PieceKind::Queen => todo!(),
-            PieceKind::Rook => todo!(),
+            PieceKind::Bishop => ValidMoveBuilder::new().build(),
+            PieceKind::King => ValidMoveBuilder::new()
+                .up(1)
+                .down(1)
+                .left(1)
+                .right(1)
+                .build(),
+            PieceKind::Knight => ValidMoveBuilder::new().build(),
+            PieceKind::Pawn => ValidMoveBuilder::new().up(1).build(),
+            PieceKind::Queen => ValidMoveBuilder::new()
+                .up(100)
+                .down(100)
+                .left(100)
+                .right(100)
+                .build(),
+            PieceKind::Rook => ValidMoveBuilder::new()
+                .up(100)
+                .down(100)
+                .left(100)
+                .right(100)
+                .build(),
         }
     }
 
@@ -163,6 +177,60 @@ impl PieceKind {
             PieceKind::Queen => 9,
             PieceKind::Rook => 5,
         }
+    }
+}
+
+pub struct ValidMoves {
+    up: u8,
+    down: u8,
+    left: u8,
+    right: u8,
+}
+
+struct ValidMoveBuilder {
+    up: u8,
+    down: u8,
+    left: u8,
+    right: u8,
+}
+
+impl ValidMoveBuilder {
+    fn build(&self) -> ValidMoves {
+        ValidMoves {
+            up: self.up,
+            down: self.down,
+            left: self.left,
+            right: self.right,
+        }
+    }
+
+    fn down(&mut self, n: u8) -> &mut Self {
+        self.down = n;
+        self
+    }
+
+    fn left(&mut self, n: u8) -> &mut Self {
+        self.left = n;
+        self
+    }
+
+    fn new() -> Self {
+        Self {
+            up: 0,
+            down: 0,
+            left: 0,
+            right: 0,
+        }
+    }
+
+    fn right(&mut self, n: u8) -> &mut Self {
+        self.right = n;
+        self
+    }
+
+    fn up(&mut self, n: u8) -> &mut Self {
+        self.up = n;
+        self
     }
 }
 
