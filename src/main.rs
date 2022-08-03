@@ -138,7 +138,7 @@ fn update_dimensions(
     piece_types: Query<&Square>,
     positions: Query<&Position>,
 ) {
-    for event in window_resized_event.iter() {
+    window_resized_event.iter().for_each(|event| {
         // Calculate new piece and square size, then calculate the centre of the window
         let w_size = event.width / board.layout().len() as f32;
         let h_size = event.height / board.layout().len() as f32;
@@ -149,7 +149,7 @@ fn update_dimensions(
         };
 
         // Update the size of the squares and pieces and translate them to correct position
-        for entity in entities.iter() {
+        entities.iter().for_each(|entity| {
             // Update the size of the entity
             let mut transform = transforms.get_mut(entity).unwrap();
             transform.scale = Vec3::splat(size);
@@ -167,8 +167,8 @@ fn update_dimensions(
                 position.y as f32 * size - event.height / 2.0 + (size / 2.0),
                 z_index,
             )
-        }
-    }
+        });
+    });
 }
 
 fn drag_and_drop(
@@ -192,13 +192,13 @@ fn drag_and_drop(
     if cursor_state.piece.is_some() {
         if mouse_button_input.just_released(MouseButton::Left) {
             let mut closest_square: Option<Entity> = None;
-            for square in squares.iter() {
+            squares.iter().for_each(|square| {
                 let transform = transforms.get(square).unwrap();
                 let diff = cursor_to_piece_diff(&cursor_state.position, &transform.translation);
                 if diff.length() < (transform.scale.x / 2.0) {
                     closest_square = Some(square);
                 }
-            }
+            });
 
             if closest_square.is_none() {
                 return;
@@ -258,13 +258,13 @@ fn drag_and_drop(
 
     // If the left mouse button is pressed, update the cursor state to contain the closest piece to the cursor
     if mouse_button_input.just_pressed(MouseButton::Left) {
-        for piece in pieces.iter() {
+        pieces.iter().for_each(|piece| {
             let transform = transforms.get(piece).unwrap();
             let diff = cursor_to_piece_diff(&cursor_state.position, &transform.translation);
             if diff.length() < (transform.scale.x / 2.0) {
                 cursor_state.piece = Some((piece, diff));
             }
-        }
+        });
     }
 }
 
