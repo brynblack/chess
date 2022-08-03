@@ -139,14 +139,7 @@ fn update_dimensions(
     positions: Query<&Position>,
 ) {
     for event in window_resized_event.iter() {
-        // Calculate new piece and square size, then calculate the centre of the window
-        let w_size = event.width / board.layout().len() as f32;
-        let h_size = event.height / board.layout().len() as f32;
-        let size = w_size.total_cmp(&h_size);
-        let size = match size {
-            std::cmp::Ordering::Greater => h_size,
-            _ => w_size,
-        };
+        let size = (event.width / board.layout().len() as f32).min(event.height / board.layout().len() as f32);
 
         // Update the size of the squares and pieces and translate them to correct position
         for entity in entities.iter() {
