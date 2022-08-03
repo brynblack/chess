@@ -16,7 +16,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle, window::WindowResized};
+use bevy::{
+    prelude::*,
+    sprite::MaterialMesh2dBundle,
+    window::{PresentMode, WindowMode, WindowResized},
+};
 use chess::board::{Board, Move, PieceColour, PieceKind, Position, Square};
 
 const LIGHT_COLOUR: Color = Color::rgb(0.93, 0.93, 0.82);
@@ -33,9 +37,9 @@ fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
             title: "Chess".to_string(),
-            width: 960.,
-            height: 960.,
-            ..Default::default()
+            present_mode: PresentMode::AutoNoVsync,
+            mode: WindowMode::BorderlessFullscreen,
+            ..default()
         })
         .init_resource::<Board>()
         .add_plugins(DefaultPlugins)
@@ -52,10 +56,8 @@ fn setup(
     mut materials: ResMut<Assets<ColorMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
-    commands.spawn_bundle(Camera2dBundle::default());
-
-    for (y, rank) in board.layout().iter().enumerate() {
-        for (x, square) in rank.iter().enumerate() {
+    board.layout().iter().enumerate().for_each(|(y, rank)| {
+        rank.iter().enumerate().for_each(|(x, square)| {
             commands
                 .spawn_bundle(MaterialMesh2dBundle {
                     mesh: meshes
@@ -64,23 +66,23 @@ fn setup(
                             flip: false,
                         }))
                         .into(),
+                    material: materials.add(ColorMaterial::from(if (y + x) % 2 == 0 {
+                        DARK_COLOUR
+                    } else {
+                        LIGHT_COLOUR
+                    })),
                     transform: Transform::from_xyz(
                         x as f32 * SQUARE_SIZE,
                         y as f32 * SQUARE_SIZE,
                         0.0,
                     )
                     .with_scale(Vec3::splat(SQUARE_SIZE)),
-                    material: materials.add(ColorMaterial::from(if (y + x) % 2 == 0 {
-                        DARK_COLOUR
-                    } else {
-                        LIGHT_COLOUR
-                    })),
                     ..default()
                 })
                 .insert(Position { x, y });
 
             let piece_texture = match square {
-                Square::Empty => continue,
+                Square::Empty => return,
                 Square::Piece {
                     piece_kind: piece_type,
                     piece_colour,
@@ -112,18 +114,20 @@ fn setup(
                             flip: false,
                         }))
                         .into(),
+                    material: materials.add(ColorMaterial::from(piece_texture)),
                     transform: Transform::from_xyz(
                         x as f32 * SQUARE_SIZE,
                         y as f32 * SQUARE_SIZE,
                         1.0,
                     )
                     .with_scale(Vec3::splat(SQUARE_SIZE)),
-                    material: materials.add(ColorMaterial::from(piece_texture)),
                     ..default()
                 })
                 .insert_bundle((Position { x, y }, *square));
-        }
-    }
+        })
+    });
+
+    commands.spawn_bundle(Camera2dBundle::default());
 }
 
 fn update_dimensions(
