@@ -211,22 +211,18 @@ fn update_dimensions(
     positions: Query<&Position>,
 ) {
     window_resized_event.iter().for_each(|event| {
-        // Calculate the new square size
-        let size = ((event.width / board.layout().len() as f32)).min(event.height / board.layout().len() as f32);
+        let size = (event.width / board.layout().len() as f32)
+            .min(event.height / board.layout().len() as f32);
 
-        // Update the size of the squares and pieces and translate them to correct position
         entities.iter().for_each(|entity| {
-            // Update the size of the entity
             let mut transform = transforms.get_mut(entity).unwrap();
             transform.scale = Vec3::splat(size);
 
-            // Evaluate the correct z-index for the type of entity
             let z_index = match piece_types.get(entity) {
                 Ok(_) => 1.0,
                 Err(_) => 0.0,
             };
 
-            // Translate the entity to the correct position
             let position = positions.get(entity).unwrap();
             transform.translation = Vec3::new(
                 position.x as f32 * size - event.width / 2.0 + (size / 2.0),
@@ -263,6 +259,7 @@ fn drag_and_drop(
     mut transforms: Query<&mut Transform>,
     mut positions: Query<&mut Position>,
     mut board: ResMut<Board>,
+    mut commands: Commands,
 ) {
     // If the cursor moves, calculate the position of the cursor relative to the origin of the chessboard
     if let Some(cursor_event) = cursor_moved_event.iter().last() {
@@ -279,6 +276,21 @@ fn drag_and_drop(
                 let diff = cursor_to_piece_diff(&cursor_state.position, &transform.translation);
                 if diff.length() < (transform.scale.x / 2.0) {
                     closest_square = Some(square);
+                }
+            });
+
+            if closest_square.is_none() {
+                return;
+            }
+
+            let mut closest_piece: Option<Entity> = None;
+            pieces.iter().for_each(|piece| {
+                let transform = transforms.get(piece).unwrap();
+                let diff = cursor_to_piece_diff(&cursor_state.position, &transform.translation);
+                if diff.length() < (transform.scale.x / 2.0) {
+                    if piece != cursor_state.piece.unwrap().0 {
+                        closest_piece = Some(piece);
+                    }
                 }
             });
 
@@ -311,6 +323,7 @@ fn drag_and_drop(
                     piece_pos.translation.y = boilerplate.y as f32 * piece_size.y
                         - window.height() / 2.0
                         + (piece_size.y / 2.0);
+                    commands.entity(closest_piece.unwrap()).despawn();
                 }
                 Err(err) => {
                     eprintln!("{}", err);
