@@ -17,9 +17,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use bevy::{
+    diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin},
     prelude::*,
     sprite::MaterialMesh2dBundle,
-    window::{PresentMode, WindowMode, WindowResized},
+    window::{PresentMode/*, WindowMode*/, WindowResized},
 };
 use chess::board::{Board, Move, PieceColour, PieceKind, Position, Square};
 
@@ -33,19 +34,28 @@ struct CursorState {
     piece: Option<(Entity, Vec3)>,
 }
 
+#[derive(Component)]
+struct PlayerText;
+
+#[derive(Component)]
+struct FpsText;
+
 fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
             title: "Chess".to_string(),
             present_mode: PresentMode::AutoNoVsync,
-            mode: WindowMode::BorderlessFullscreen,
+            // mode: WindowMode::BorderlessFullscreen,
             ..default()
         })
         .init_resource::<Board>()
         .add_plugins(DefaultPlugins)
+        .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_startup_system(setup)
         .add_system(update_dimensions)
         .add_system(drag_and_drop)
+        .add_system(update_player_text)
+        .add_system(update_fps_counter)
         .run();
 }
 
@@ -56,6 +66,68 @@ fn setup(
     mut materials: ResMut<Assets<ColorMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
+    commands
+    .spawn_bundle(
+        TextBundle::from_sections([
+            TextSection::new(
+                "Current player: ",
+                TextStyle {
+                    font: asset_server.load("fonts/text.ttf"),
+                    font_size: 16.0,
+                    color: Color::WHITE,
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font: asset_server.load("fonts/text.ttf"),
+                font_size: 16.0,
+                color: Color::WHITE,
+            }),
+        ])
+        .with_text_alignment(TextAlignment::TOP_CENTER)
+        .with_style(Style {
+            align_self: AlignSelf::FlexEnd,
+            position_type: PositionType::Absolute,
+            position: UiRect {
+                bottom: Val::Px(5.0),
+                right: Val::Px(15.0),
+                ..default()
+            },
+            ..default()
+        }),
+    )
+    .insert(PlayerText);
+
+commands
+    .spawn_bundle(
+        TextBundle::from_sections([
+            TextSection::new(
+                "FPS: ",
+                TextStyle {
+                    font: asset_server.load("fonts/text.ttf"),
+                    font_size: 16.0,
+                    color: Color::WHITE,
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font: asset_server.load("fonts/text.ttf"),
+                font_size: 16.0,
+                color: Color::WHITE,
+            }),
+        ])
+        .with_text_alignment(TextAlignment::TOP_CENTER)
+        .with_style(Style {
+            align_self: AlignSelf::FlexEnd,
+            position_type: PositionType::Absolute,
+            position: UiRect {
+                bottom: Val::Px(20.0),
+                right: Val::Px(15.0),
+                ..default()
+            },
+            ..default()
+        }),
+    )
+    .insert(FpsText);
+
     board.layout().iter().enumerate().for_each(|(y, rank)| {
         rank.iter().enumerate().for_each(|(x, square)| {
             commands
@@ -139,7 +211,8 @@ fn update_dimensions(
     positions: Query<&Position>,
 ) {
     window_resized_event.iter().for_each(|event| {
-        let size = (event.width / board.layout().len() as f32).min(event.height / board.layout().len() as f32);
+        // Calculate the new square size
+        let size = ((event.width / board.layout().len() as f32)).min(event.height / board.layout().len() as f32);
 
         // Update the size of the squares and pieces and translate them to correct position
         entities.iter().for_each(|entity| {
@@ -162,6 +235,22 @@ fn update_dimensions(
             )
         });
     });
+}
+
+fn update_player_text(board: Res<Board>, mut query: Query<&mut Text, With<PlayerText>>) {
+    for mut text in &mut query {
+        text.sections[1].value = format!("{:?}", board.player());
+    }
+}
+
+fn update_fps_counter(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text, With<FpsText>>) {
+    for mut text in &mut query {
+        if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
+            if let Some(average) = fps.average() {
+                text.sections[1].value = format!("{average:.2}");
+            }
+        }
+    }
 }
 
 fn drag_and_drop(
