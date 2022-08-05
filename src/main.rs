@@ -20,7 +20,7 @@ use bevy::{
     diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin},
     prelude::*,
     sprite::MaterialMesh2dBundle,
-    window::{PresentMode/*, WindowMode*/, WindowResized},
+    window::{PresentMode /*, WindowMode*/, WindowResized},
 };
 use chess::board::{Board, Move, PieceColour, PieceKind, Position, Square};
 
@@ -67,66 +67,66 @@ fn setup(
     asset_server: Res<AssetServer>,
 ) {
     commands
-    .spawn_bundle(
-        TextBundle::from_sections([
-            TextSection::new(
-                "Current player: ",
-                TextStyle {
+        .spawn_bundle(
+            TextBundle::from_sections([
+                TextSection::new(
+                    "Current player: ",
+                    TextStyle {
+                        font: asset_server.load("fonts/text.ttf"),
+                        font_size: 16.0,
+                        color: Color::WHITE,
+                    },
+                ),
+                TextSection::from_style(TextStyle {
                     font: asset_server.load("fonts/text.ttf"),
                     font_size: 16.0,
                     color: Color::WHITE,
+                }),
+            ])
+            .with_text_alignment(TextAlignment::TOP_CENTER)
+            .with_style(Style {
+                align_self: AlignSelf::FlexEnd,
+                position_type: PositionType::Absolute,
+                position: UiRect {
+                    bottom: Val::Px(5.0),
+                    right: Val::Px(15.0),
+                    ..default()
                 },
-            ),
-            TextSection::from_style(TextStyle {
-                font: asset_server.load("fonts/text.ttf"),
-                font_size: 16.0,
-                color: Color::WHITE,
-            }),
-        ])
-        .with_text_alignment(TextAlignment::TOP_CENTER)
-        .with_style(Style {
-            align_self: AlignSelf::FlexEnd,
-            position_type: PositionType::Absolute,
-            position: UiRect {
-                bottom: Val::Px(5.0),
-                right: Val::Px(15.0),
                 ..default()
-            },
-            ..default()
-        }),
-    )
-    .insert(PlayerText);
+            }),
+        )
+        .insert(PlayerText);
 
-commands
-    .spawn_bundle(
-        TextBundle::from_sections([
-            TextSection::new(
-                "FPS: ",
-                TextStyle {
+    commands
+        .spawn_bundle(
+            TextBundle::from_sections([
+                TextSection::new(
+                    "FPS: ",
+                    TextStyle {
+                        font: asset_server.load("fonts/text.ttf"),
+                        font_size: 16.0,
+                        color: Color::WHITE,
+                    },
+                ),
+                TextSection::from_style(TextStyle {
                     font: asset_server.load("fonts/text.ttf"),
                     font_size: 16.0,
                     color: Color::WHITE,
+                }),
+            ])
+            .with_text_alignment(TextAlignment::TOP_CENTER)
+            .with_style(Style {
+                align_self: AlignSelf::FlexEnd,
+                position_type: PositionType::Absolute,
+                position: UiRect {
+                    bottom: Val::Px(20.0),
+                    right: Val::Px(15.0),
+                    ..default()
                 },
-            ),
-            TextSection::from_style(TextStyle {
-                font: asset_server.load("fonts/text.ttf"),
-                font_size: 16.0,
-                color: Color::WHITE,
-            }),
-        ])
-        .with_text_alignment(TextAlignment::TOP_CENTER)
-        .with_style(Style {
-            align_self: AlignSelf::FlexEnd,
-            position_type: PositionType::Absolute,
-            position: UiRect {
-                bottom: Val::Px(20.0),
-                right: Val::Px(15.0),
                 ..default()
-            },
-            ..default()
-        }),
-    )
-    .insert(FpsText);
+            }),
+        )
+        .insert(FpsText);
 
     board.layout().iter().enumerate().for_each(|(y, rank)| {
         rank.iter().enumerate().for_each(|(x, square)| {
@@ -323,7 +323,9 @@ fn drag_and_drop(
                     piece_pos.translation.y = boilerplate.y as f32 * piece_size.y
                         - window.height() / 2.0
                         + (piece_size.y / 2.0);
-                    commands.entity(closest_piece.unwrap()).despawn();
+                    if closest_piece.is_some() {
+                        commands.entity(closest_piece.unwrap()).despawn();
+                    }
                 }
                 Err(err) => {
                     eprintln!("{}", err);
