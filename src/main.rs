@@ -275,12 +275,28 @@ fn drag_and_drop(
                     }
                 }
             });
-
             let piece = cursor_state.piece.unwrap();
-            let piece_coord = query.get(piece.0).unwrap().2;
-            let closest_square_coord = query.get(closest_square.unwrap()).unwrap().2;
-            let boilerplate = closest_square_coord.clone();
             let piece_size = query.get(piece.0).unwrap().1.scale;
+
+            let closest_square = match closest_square {
+                Some(square) => square,
+                None => {
+                    let (_, mut piece_pos, piece_coord, _) = query.get_mut(piece.0).unwrap();
+                    let window = windows.get_primary().unwrap();
+                    piece_pos.translation.x = piece_coord.x as f32 * piece_size.x
+                        - window.width() / 2.0
+                        + (piece_size.x / 2.0);
+                    piece_pos.translation.y = piece_coord.y as f32 * piece_size.y
+                        - window.height() / 2.0
+                        + (piece_size.y / 2.0);
+                    cursor_state.piece = None;
+                    return;
+                }
+            };
+
+            let piece_coord = query.get(piece.0).unwrap().2;
+            let closest_square_coord = query.get(closest_square).unwrap().2;
+            let boilerplate = closest_square_coord.clone();
 
             match board.move_piece(Move {
                 old_pos: *piece_coord,
