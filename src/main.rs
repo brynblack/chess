@@ -245,8 +245,7 @@ fn drag_and_drop(
     mut cursor_state: Local<CursorState>,
     mouse_inputs: Res<Input<MouseButton>>,
     mut moved_events: EventReader<CursorMoved>,
-    mut positions: Query<&mut Position>,
-    mut query: Query<(Entity, &mut Transform, Option<&Square>)>,
+    mut query: Query<(Entity, &mut Transform, &mut Position, Option<&Square>)>,
     windows: Res<Windows>,
 ) {
     if let Some(cursor_event) = moved_events.iter().last() {
@@ -258,22 +257,16 @@ fn drag_and_drop(
     if cursor_state.piece.is_some() {
         if mouse_inputs.just_released(MouseButton::Left) {
             let mut closest_square: Option<Entity> = None;
-            query.iter().for_each(|(entity, transform, square)| {
-                if square.is_none() {
+            let mut closest_piece: Option<Entity> = None;
+
+            query.iter().for_each(|(entity, transform, _, piece)| {
+                if piece.is_none() {
                     let diff = cursor_to_piece_diff(&cursor_state.position, &transform.translation);
                     if diff.length() < (transform.scale.x / 2.0) {
                         closest_square = Some(entity);
                     }
                 }
-            });
-
-            if closest_square.is_none() {
-                return;
-            }
-
-            let mut closest_piece: Option<Entity> = None;
-            query.iter().for_each(|(entity, transform, square)| {
-                if square.is_some() {
+                if piece.is_some() {
                     let diff = cursor_to_piece_diff(&cursor_state.position, &transform.translation);
                     if diff.length() < (transform.scale.x / 2.0) {
                         if entity != cursor_state.piece.unwrap().0 {
@@ -283,22 +276,11 @@ fn drag_and_drop(
                 }
             });
 
-            if closest_square.is_none() {
-                return;
-            }
-
             let piece = cursor_state.piece.unwrap();
-
-            let piece_coord = positions.get(piece.0).unwrap();
-
-            let closest_square_coord = positions.get(closest_square.unwrap()).unwrap();
+            let piece_coord = query.get(piece.0).unwrap().2;
+            let closest_square_coord = query.get(closest_square.unwrap()).unwrap().2;
             let boilerplate = closest_square_coord.clone();
-
             let piece_size = query.get(piece.0).unwrap().1.scale;
-            let mut piece_pos = query.get_mut(piece.0).unwrap().1;
-
-            println!("{:?}", piece_coord);
-            println!("{:?}", closest_square_coord);
 
             match board.move_piece(Move {
                 old_pos: *piece_coord,
@@ -306,7 +288,7 @@ fn drag_and_drop(
             }) {
                 Ok(_) => {
                     let window = windows.get_primary().unwrap();
-                    let mut piece_coord = positions.get_mut(piece.0).unwrap();
+                    let (_, mut piece_pos, mut piece_coord, _) = query.get_mut(piece.0).unwrap();
                     piece_coord.x = boilerplate.x;
                     piece_coord.y = boilerplate.y;
                     piece_pos.translation.x = boilerplate.x as f32 * piece_size.x
@@ -320,6 +302,7 @@ fn drag_and_drop(
                     }
                 }
                 Err(err) => {
+                    let (_, mut piece_pos, piece_coord, _) = query.get_mut(piece.0).unwrap();
                     eprintln!("{}", err);
                     let window = windows.get_primary().unwrap();
                     piece_pos.translation.x = piece_coord.x as f32 * piece_size.x
@@ -338,7 +321,6 @@ fn drag_and_drop(
         if mouse_inputs.pressed(MouseButton::Left) {
             let piece = cursor_state.piece.unwrap();
             let mut transform = query.get_mut(piece.0).unwrap().1;
-
             transform.translation.x = cursor_state.position.x + piece.1.x;
             transform.translation.y = cursor_state.position.y + piece.1.y;
             return;
@@ -346,10 +328,12 @@ fn drag_and_drop(
     }
 
     if mouse_inputs.just_pressed(MouseButton::Left) {
-        query.iter().for_each(|(entity, transform, _)| {
-            let diff = cursor_to_piece_diff(&cursor_state.position, &transform.translation);
-            if diff.length() < (transform.scale.x / 2.0) {
-                cursor_state.piece = Some((entity, diff));
+        query.iter().for_each(|(entity, transform, _, piece)| {
+            if piece.is_some() {
+                let diff = cursor_to_piece_diff(&cursor_state.position, &transform.translation);
+                if diff.length() < (transform.scale.x / 2.0) {
+                    cursor_state.piece = Some((entity, diff));
+                }
             }
         });
     }
