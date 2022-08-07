@@ -180,6 +180,7 @@ impl PieceKind {
     }
 }
 
+#[derive(Debug)]
 pub struct ValidMoves {
     up: u8,
     down: u8,

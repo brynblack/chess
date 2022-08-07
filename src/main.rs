@@ -20,7 +20,7 @@ use bevy::{
     diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin},
     prelude::*,
     sprite::MaterialMesh2dBundle,
-    window::{PresentMode /*, WindowMode*/, WindowResized},
+    window::{PresentMode, WindowMode, WindowResized},
 };
 use chess::board::{Board, Move, PieceColour, PieceKind, Position, Square};
 
@@ -45,7 +45,7 @@ fn main() {
         .insert_resource(WindowDescriptor {
             title: "Chess".to_string(),
             present_mode: PresentMode::AutoNoVsync,
-            // mode: WindowMode::BorderlessFullscreen,
+            mode: WindowMode::BorderlessFullscreen,
             ..default()
         })
         .init_resource::<Board>()
@@ -203,31 +203,21 @@ fn setup(
 }
 
 fn update_dimensions(
-    mut window_resized_event: EventReader<WindowResized>,
     board: Res<Board>,
-    entities: Query<Entity, With<Position>>,
-    mut transforms: Query<&mut Transform>,
-    piece_types: Query<&Square>,
-    positions: Query<&Position>,
+    mut query: Query<(&mut Transform, &Position)>,
+    mut resize_events: EventReader<WindowResized>,
 ) {
-    window_resized_event.iter().for_each(|event| {
-        let size = (event.width / board.layout().len() as f32)
+    resize_events.iter().for_each(|event| {
+        let new_size = (event.width / board.layout().len() as f32)
             .min(event.height / board.layout().len() as f32);
 
-        entities.iter().for_each(|entity| {
-            let mut transform = transforms.get_mut(entity).unwrap();
-            transform.scale = Vec3::splat(size);
+        query.iter_mut().for_each(|(mut transform, position)| {
+            transform.scale = Vec3::splat(new_size);
 
-            let z_index = match piece_types.get(entity) {
-                Ok(_) => 1.0,
-                Err(_) => 0.0,
-            };
-
-            let position = positions.get(entity).unwrap();
             transform.translation = Vec3::new(
-                position.x as f32 * size - event.width / 2.0 + (size / 2.0),
-                position.y as f32 * size - event.height / 2.0 + (size / 2.0),
-                z_index,
+                position.x as f32 * new_size - event.width / 2.0 + (new_size / 2.0),
+                position.y as f32 * new_size - event.height / 2.0 + (new_size / 2.0),
+                transform.translation.z,
             )
         });
     });
@@ -250,32 +240,30 @@ fn update_fps_counter(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text,
 }
 
 fn drag_and_drop(
-    mut cursor_moved_event: EventReader<CursorMoved>,
-    windows: Res<Windows>,
-    mut cursor_state: Local<CursorState>,
-    mouse_button_input: Res<Input<MouseButton>>,
-    pieces: Query<Entity, (With<Position>, With<Square>)>,
-    squares: Query<Entity, (With<Position>, Without<Square>)>,
-    mut transforms: Query<&mut Transform>,
-    mut positions: Query<&mut Position>,
     mut board: ResMut<Board>,
     mut commands: Commands,
+    mut cursor_state: Local<CursorState>,
+    mouse_inputs: Res<Input<MouseButton>>,
+    mut moved_events: EventReader<CursorMoved>,
+    mut positions: Query<&mut Position>,
+    mut query: Query<(Entity, &mut Transform, Option<&Square>)>,
+    windows: Res<Windows>,
 ) {
-    // If the cursor moves, calculate the position of the cursor relative to the origin of the chessboard
-    if let Some(cursor_event) = cursor_moved_event.iter().last() {
+    if let Some(cursor_event) = moved_events.iter().last() {
         let window = windows.get_primary().unwrap();
         let window_centre = Vec2::new(window.width() / 2.0, window.height() / 2.0);
         cursor_state.position = cursor_event.position - window_centre;
     };
 
     if cursor_state.piece.is_some() {
-        if mouse_button_input.just_released(MouseButton::Left) {
+        if mouse_inputs.just_released(MouseButton::Left) {
             let mut closest_square: Option<Entity> = None;
-            squares.iter().for_each(|square| {
-                let transform = transforms.get(square).unwrap();
-                let diff = cursor_to_piece_diff(&cursor_state.position, &transform.translation);
-                if diff.length() < (transform.scale.x / 2.0) {
-                    closest_square = Some(square);
+            query.iter().for_each(|(entity, transform, square)| {
+                if square.is_none() {
+                    let diff = cursor_to_piece_diff(&cursor_state.position, &transform.translation);
+                    if diff.length() < (transform.scale.x / 2.0) {
+                        closest_square = Some(entity);
+                    }
                 }
             });
 
@@ -284,12 +272,13 @@ fn drag_and_drop(
             }
 
             let mut closest_piece: Option<Entity> = None;
-            pieces.iter().for_each(|piece| {
-                let transform = transforms.get(piece).unwrap();
-                let diff = cursor_to_piece_diff(&cursor_state.position, &transform.translation);
-                if diff.length() < (transform.scale.x / 2.0) {
-                    if piece != cursor_state.piece.unwrap().0 {
-                        closest_piece = Some(piece);
+            query.iter().for_each(|(entity, transform, square)| {
+                if square.is_some() {
+                    let diff = cursor_to_piece_diff(&cursor_state.position, &transform.translation);
+                    if diff.length() < (transform.scale.x / 2.0) {
+                        if entity != cursor_state.piece.unwrap().0 {
+                            closest_piece = Some(entity);
+                        }
                     }
                 }
             });
@@ -301,18 +290,21 @@ fn drag_and_drop(
             let piece = cursor_state.piece.unwrap();
 
             let piece_coord = positions.get(piece.0).unwrap();
+
             let closest_square_coord = positions.get(closest_square.unwrap()).unwrap();
             let boilerplate = closest_square_coord.clone();
 
-            let piece_size = transforms.get(piece.0).unwrap().scale;
-            let mut piece_pos = transforms.get_mut(piece.0).unwrap();
+            let piece_size = query.get(piece.0).unwrap().1.scale;
+            let mut piece_pos = query.get_mut(piece.0).unwrap().1;
+
+            println!("{:?}", piece_coord);
+            println!("{:?}", closest_square_coord);
 
             match board.move_piece(Move {
                 old_pos: *piece_coord,
                 new_pos: *closest_square_coord,
             }) {
                 Ok(_) => {
-                    // Update the translation of the piece
                     let window = windows.get_primary().unwrap();
                     let mut piece_coord = positions.get_mut(piece.0).unwrap();
                     piece_coord.x = boilerplate.x;
@@ -343,23 +335,21 @@ fn drag_and_drop(
             return;
         }
 
-        if mouse_button_input.pressed(MouseButton::Left) {
+        if mouse_inputs.pressed(MouseButton::Left) {
             let piece = cursor_state.piece.unwrap();
-            let mut piece_pos = transforms.get_mut(piece.0).unwrap();
+            let mut transform = query.get_mut(piece.0).unwrap().1;
 
-            piece_pos.translation.x = cursor_state.position.x + piece.1.x;
-            piece_pos.translation.y = cursor_state.position.y + piece.1.y;
+            transform.translation.x = cursor_state.position.x + piece.1.x;
+            transform.translation.y = cursor_state.position.y + piece.1.y;
             return;
         }
     }
 
-    // If the left mouse button is pressed, update the cursor state to contain the closest piece to the cursor
-    if mouse_button_input.just_pressed(MouseButton::Left) {
-        pieces.iter().for_each(|piece| {
-            let transform = transforms.get(piece).unwrap();
+    if mouse_inputs.just_pressed(MouseButton::Left) {
+        query.iter().for_each(|(entity, transform, _)| {
             let diff = cursor_to_piece_diff(&cursor_state.position, &transform.translation);
             if diff.length() < (transform.scale.x / 2.0) {
-                cursor_state.piece = Some((piece, diff));
+                cursor_state.piece = Some((entity, diff));
             }
         });
     }
