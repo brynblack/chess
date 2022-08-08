@@ -9,3 +9,9 @@ license = "AGPL-3.0-or-later"
 
 [dependencies]
 bevy = { version = "0.8.0", features = ["wayland"] }
+
+[profile.release]
+codegen-units = 1
+lto = true
+panic = "abort"
+strip = true
