@@ -20,19 +20,17 @@ use bevy::{
     diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin},
     prelude::*,
     sprite::MaterialMesh2dBundle,
-    window::{PresentMode, WindowMode, WindowResized},
+    window::{PresentMode, WindowMode},
 };
-use chess::board::{Board, Move, PieceColour, PieceKind, Position, Square};
+use chess::{
+    board::{Board, PieceColour, PieceKind, Position, Square},
+    drag_and_drop::DragAndDropPlugin,
+    update_dimensions::UpdateDimensionsPlugin,
+};
 
 const LIGHT_COLOUR: Color = Color::rgb(0.93, 0.93, 0.82);
 const DARK_COLOUR: Color = Color::rgb(0.46, 0.59, 0.34);
 const SQUARE_SIZE: f32 = 64.0;
-
-#[derive(Default, Component)]
-struct CursorState {
-    position: Vec2,
-    piece: Option<(Entity, Vec3)>,
-}
 
 #[derive(Component)]
 struct PlayerText;
@@ -50,10 +48,10 @@ fn main() {
         })
         .init_resource::<Board>()
         .add_plugins(DefaultPlugins)
+        .add_plugin(DragAndDropPlugin)
+        .add_plugin(UpdateDimensionsPlugin)
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_startup_system(setup)
-        .add_system(update_dimensions)
-        .add_system(drag_and_drop)
         .add_system(update_player_text)
         .add_system(update_fps_counter)
         .run();
@@ -202,27 +200,6 @@ fn setup(
     commands.spawn_bundle(Camera2dBundle::default());
 }
 
-fn update_dimensions(
-    board: Res<Board>,
-    mut query: Query<(&mut Transform, &Position)>,
-    mut resize_events: EventReader<WindowResized>,
-) {
-    resize_events.iter().for_each(|event| {
-        let new_size = (event.width / board.layout().len() as f32)
-            .min(event.height / board.layout().len() as f32);
-
-        query.iter_mut().for_each(|(mut transform, position)| {
-            transform.scale = Vec3::splat(new_size);
-
-            transform.translation = Vec3::new(
-                position.x as f32 * new_size - event.width / 2.0 + (new_size / 2.0),
-                position.y as f32 * new_size - event.height / 2.0 + (new_size / 2.0),
-                transform.translation.z,
-            )
-        });
-    });
-}
-
 fn update_player_text(board: Res<Board>, mut query: Query<&mut Text, With<PlayerText>>) {
     for mut text in &mut query {
         text.sections[1].value = format!("{:?}", board.player());
@@ -237,124 +214,4 @@ fn update_fps_counter(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text,
             }
         }
     }
-}
-
-fn drag_and_drop(
-    mut board: ResMut<Board>,
-    mut commands: Commands,
-    mut cursor_state: Local<CursorState>,
-    mouse_inputs: Res<Input<MouseButton>>,
-    mut moved_events: EventReader<CursorMoved>,
-    mut query: Query<(Entity, &mut Transform, &mut Position, Option<&Square>)>,
-    windows: Res<Windows>,
-) {
-    if let Some(cursor_event) = moved_events.iter().last() {
-        let window = windows.get_primary().unwrap();
-        let window_centre = Vec2::new(window.width() / 2.0, window.height() / 2.0);
-        cursor_state.position = cursor_event.position - window_centre;
-    };
-
-    if cursor_state.piece.is_some() {
-        if mouse_inputs.just_released(MouseButton::Left) {
-            let mut closest_square: Option<Entity> = None;
-            let mut closest_piece: Option<Entity> = None;
-
-            query.iter().for_each(|(entity, transform, _, piece)| {
-                if piece.is_none() {
-                    let diff = cursor_to_piece_diff(&cursor_state.position, &transform.translation);
-                    if diff.length() < (transform.scale.x / 2.0) {
-                        closest_square = Some(entity);
-                    }
-                }
-                if piece.is_some() {
-                    let diff = cursor_to_piece_diff(&cursor_state.position, &transform.translation);
-                    if diff.length() < (transform.scale.x / 2.0) {
-                        if entity != cursor_state.piece.unwrap().0 {
-                            closest_piece = Some(entity);
-                        }
-                    }
-                }
-            });
-            let piece = cursor_state.piece.unwrap();
-            let piece_size = query.get(piece.0).unwrap().1.scale;
-
-            let closest_square = match closest_square {
-                Some(square) => square,
-                None => {
-                    let (_, mut piece_pos, piece_coord, _) = query.get_mut(piece.0).unwrap();
-                    let window = windows.get_primary().unwrap();
-                    piece_pos.translation.x = piece_coord.x as f32 * piece_size.x
-                        - window.width() / 2.0
-                        + (piece_size.x / 2.0);
-                    piece_pos.translation.y = piece_coord.y as f32 * piece_size.y
-                        - window.height() / 2.0
-                        + (piece_size.y / 2.0);
-                    cursor_state.piece = None;
-                    return;
-                }
-            };
-
-            let piece_coord = query.get(piece.0).unwrap().2;
-            let closest_square_coord = query.get(closest_square).unwrap().2;
-            let boilerplate = closest_square_coord.clone();
-
-            match board.move_piece(Move {
-                old_pos: *piece_coord,
-                new_pos: *closest_square_coord,
-            }) {
-                Ok(_) => {
-                    let window = windows.get_primary().unwrap();
-                    let (_, mut piece_pos, mut piece_coord, _) = query.get_mut(piece.0).unwrap();
-                    piece_coord.x = boilerplate.x;
-                    piece_coord.y = boilerplate.y;
-                    piece_pos.translation.x = boilerplate.x as f32 * piece_size.x
-                        - window.width() / 2.0
-                        + (piece_size.x / 2.0);
-                    piece_pos.translation.y = boilerplate.y as f32 * piece_size.y
-                        - window.height() / 2.0
-                        + (piece_size.y / 2.0);
-                    if closest_piece.is_some() {
-                        commands.entity(closest_piece.unwrap()).despawn();
-                    }
-                }
-                Err(err) => {
-                    let (_, mut piece_pos, piece_coord, _) = query.get_mut(piece.0).unwrap();
-                    eprintln!("{}", err);
-                    let window = windows.get_primary().unwrap();
-                    piece_pos.translation.x = piece_coord.x as f32 * piece_size.x
-                        - window.width() / 2.0
-                        + (piece_size.x / 2.0);
-                    piece_pos.translation.y = piece_coord.y as f32 * piece_size.y
-                        - window.height() / 2.0
-                        + (piece_size.y / 2.0);
-                }
-            }
-
-            cursor_state.piece = None;
-            return;
-        }
-
-        if mouse_inputs.pressed(MouseButton::Left) {
-            let piece = cursor_state.piece.unwrap();
-            let mut transform = query.get_mut(piece.0).unwrap().1;
-            transform.translation.x = cursor_state.position.x + piece.1.x;
-            transform.translation.y = cursor_state.position.y + piece.1.y;
-            return;
-        }
-    }
-
-    if mouse_inputs.just_pressed(MouseButton::Left) {
-        query.iter().for_each(|(entity, transform, _, piece)| {
-            if piece.is_some() {
-                let diff = cursor_to_piece_diff(&cursor_state.position, &transform.translation);
-                if diff.length() < (transform.scale.x / 2.0) {
-                    cursor_state.piece = Some((entity, diff));
-                }
-            }
-        });
-    }
-}
-
-fn cursor_to_piece_diff(cursor_pos: &Vec2, piece_pos: &Vec3) -> Vec3 {
-    Vec3::new(piece_pos.x - cursor_pos.x, piece_pos.y - cursor_pos.y, 0.0)
 }
