@@ -83,7 +83,7 @@ pub struct Move {
 ///     PieceColour::White => println!("The colour is white!"),
 /// };
 /// ```
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PieceColour {
     /// The colour black.
     Black,
@@ -103,7 +103,7 @@ pub enum PieceColour {
 /// let piece = PieceKind::Bishop;
 /// println!("{:?}", piece.valid_moves());
 /// ```
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PieceKind {
     /// A Bishop.
     Bishop,
@@ -120,40 +120,109 @@ pub enum PieceKind {
 }
 
 impl PieceKind {
-    /// Returns a vector of moves that are valid for the piece.
+    /// Checks if a move is valid or not.
     ///
-    /// # Examples
-    ///
-    /// ```
-    /// use chess::board::PieceKind;
-    ///
-    /// let piece = PieceKind::Pawn;
-    /// let valid_moves = piece.valid_moves();
-    /// println!("{:?}", valid_moves);
-    /// ```
-    pub fn valid_moves(&self) -> ValidMoves {
+    /// Returns true if the move is valid, or false if it is invalid.
+    pub fn is_move_valid(&self, pos: &Move) -> bool {
         match self {
-            PieceKind::Bishop => ValidMoveBuilder::new().build(),
-            PieceKind::King => ValidMoveBuilder::new()
-                .up(1)
-                .down(1)
-                .left(1)
-                .right(1)
-                .build(),
-            PieceKind::Knight => ValidMoveBuilder::new().build(),
-            PieceKind::Pawn => ValidMoveBuilder::new().up(1).build(),
-            PieceKind::Queen => ValidMoveBuilder::new()
-                .up(100)
-                .down(100)
-                .left(100)
-                .right(100)
-                .build(),
-            PieceKind::Rook => ValidMoveBuilder::new()
-                .up(100)
-                .down(100)
-                .left(100)
-                .right(100)
-                .build(),
+            PieceKind::King => {
+                // Horizontal
+                ((pos.old_pos.x as i8 - pos.new_pos.x as i8).abs() == 1
+                    && (pos.old_pos.y == pos.new_pos.y))
+                // Vertical
+                || ((pos.old_pos.y as i8 - pos.new_pos.y as i8).abs() == 1
+                    && (pos.old_pos.x == pos.new_pos.x))
+                // Diagonal
+                || ((pos.old_pos.x as i8 - pos.new_pos.x as i8).abs() == 1
+                    && (pos.old_pos.y as i8 - pos.new_pos.y as i8).abs() == 1)
+            }
+            _ => true,
+            // PieceKind::Queen => {
+            //     is_path_empty((pos.old_pos.x, pos.old_pos.y), new_position, &pieces)
+            //         && ((pos.old_pos.x as i8 - pos.new_pos.x as i8).abs()
+            //             == (pos.old_pos.y as i8 - pos.new_pos.y as i8).abs()
+            //             || ((pos.old_pos.x == pos.new_pos.x && pos.old_pos.y != pos.new_pos.y)
+            //                 || (pos.old_pos.y == pos.new_pos.y && pos.old_pos.x != pos.new_pos.x)))
+            // }
+            // PieceKind::Bishop => {
+            //     is_path_empty((pos.old_pos.x, pos.old_pos.y), new_position, &pieces)
+            //         && (pos.old_pos.x as i8 - pos.new_pos.x as i8).abs()
+            //             == (pos.old_pos.y as i8 - pos.new_pos.y as i8).abs()
+            // }
+            // PieceKind::Knight => {
+            //     ((pos.old_pos.x as i8 - pos.new_pos.x as i8).abs() == 2
+            //         && (pos.old_pos.y as i8 - pos.new_pos.y as i8).abs() == 1)
+            //         || ((pos.old_pos.x as i8 - pos.new_pos.x as i8).abs() == 1
+            //             && (pos.old_pos.y as i8 - pos.new_pos.y as i8).abs() == 2)
+            // }
+            // PieceKind::Rook => {
+            //     is_path_empty((pos.old_pos.x, pos.old_pos.y), new_position, &pieces)
+            //         && ((pos.old_pos.x == pos.new_pos.x && pos.old_pos.y != pos.new_pos.y)
+            //             || (pos.old_pos.y == pos.new_pos.y && pos.old_pos.x != pos.new_pos.x))
+            // }
+            // PieceKind::Pawn => {
+            //     if colour == PieceColour::White {
+            //         // Normal move
+            //         if pos.new_pos.x as i8 - pos.old_pos.x as i8 == 1
+            //             && (pos.old_pos.y == pos.new_pos.y)
+            //         {
+            //             if color_of_square(new_position, &pieces).is_none() {
+            //                 return true;
+            //             }
+            //         }
+
+            //         // Move 2 squares
+            //         if pos.old_pos.x == 1
+            //             && pos.new_pos.x as i8 - pos.old_pos.x as i8 == 2
+            //             && (pos.old_pos.y == pos.new_pos.y)
+            //             && is_path_empty((pos.old_pos.x, pos.old_pos.y), new_position, &pieces)
+            //         {
+            //             if color_of_square(new_position, &pieces).is_none() {
+            //                 return true;
+            //             }
+            //         }
+
+            //         // Take piece
+            //         if pos.new_pos.x as i8 - pos.old_pos.x as i8 == 1
+            //             && (pos.old_pos.y as i8 - pos.new_pos.y as i8).abs() == 1
+            //         {
+            //             if color_of_square(new_position, &pieces) == Some(PieceColour::Black) {
+            //                 return true;
+            //             }
+            //         }
+            //     } else {
+            //         // Normal move
+            //         if pos.new_pos.x as i8 - pos.old_pos.x as i8 == -1
+            //             && (pos.old_pos.y == pos.new_pos.y)
+            //         {
+            //             if color_of_square(new_position, &pieces).is_none() {
+            //                 return true;
+            //             }
+            //         }
+
+            //         // Move 2 squares
+            //         if pos.old_pos.x == 6
+            //             && pos.new_pos.x as i8 - pos.old_pos.x as i8 == -2
+            //             && (pos.old_pos.y == pos.new_pos.y)
+            //             && is_path_empty((pos.old_pos.x, pos.old_pos.y), new_position, &pieces)
+            //         {
+            //             if color_of_square(new_position, &pieces).is_none() {
+            //                 return true;
+            //             }
+            //         }
+
+            //         // Take piece
+            //         if pos.new_pos.x as i8 - pos.old_pos.x as i8 == -1
+            //             && (pos.old_pos.y as i8 - pos.new_pos.y as i8).abs() == 1
+            //         {
+            //             if color_of_square(new_position, &pieces) == Some(PieceColour::White) {
+            //                 return true;
+            //             }
+            //         }
+            //     }
+
+            //     false
+            // }
         }
     }
 
@@ -180,61 +249,6 @@ impl PieceKind {
     }
 }
 
-#[derive(Debug)]
-pub struct ValidMoves {
-    up: u8,
-    down: u8,
-    left: u8,
-    right: u8,
-}
-
-struct ValidMoveBuilder {
-    up: u8,
-    down: u8,
-    left: u8,
-    right: u8,
-}
-
-impl ValidMoveBuilder {
-    fn build(&self) -> ValidMoves {
-        ValidMoves {
-            up: self.up,
-            down: self.down,
-            left: self.left,
-            right: self.right,
-        }
-    }
-
-    fn down(&mut self, n: u8) -> &mut Self {
-        self.down = n;
-        self
-    }
-
-    fn left(&mut self, n: u8) -> &mut Self {
-        self.left = n;
-        self
-    }
-
-    fn new() -> Self {
-        Self {
-            up: 0,
-            down: 0,
-            left: 0,
-            right: 0,
-        }
-    }
-
-    fn right(&mut self, n: u8) -> &mut Self {
-        self.right = n;
-        self
-    }
-
-    fn up(&mut self, n: u8) -> &mut Self {
-        self.up = n;
-        self
-    }
-}
-
 /// An enum representing the possible state of a square.
 ///
 /// Contains two variants, an `Empty` variant and a `Piece` variant.
@@ -256,7 +270,7 @@ impl ValidMoveBuilder {
 ///     Square::Empty => println!("I'm just a lonely empty square :("),
 /// };
 /// ```
-#[derive(Clone, Copy, Component, Debug, PartialEq)]
+#[derive(Clone, Copy, Component, Debug, PartialEq, Eq)]
 pub enum Square {
     /// An empty square.
     Empty,
@@ -406,6 +420,9 @@ impl Board {
 
         // TODO: Valid move checks
         // piece_kind.valid_moves();
+        if !old_square.kind().unwrap().is_move_valid(piece_move) {
+            return Err("Error: Move is invalid!");
+        };
 
         Ok(())
     }
