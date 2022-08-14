@@ -126,15 +126,24 @@ impl PieceKind {
     pub fn is_move_valid(&self, pos: &Move) -> bool {
         match self {
             PieceKind::King => {
-                // Horizontal
                 ((pos.old_pos.x as i8 - pos.new_pos.x as i8).abs() == 1
                     && (pos.old_pos.y == pos.new_pos.y))
-                // Vertical
-                || ((pos.old_pos.y as i8 - pos.new_pos.y as i8).abs() == 1
-                    && (pos.old_pos.x == pos.new_pos.x))
-                // Diagonal
-                || ((pos.old_pos.x as i8 - pos.new_pos.x as i8).abs() == 1
+                    || ((pos.old_pos.y as i8 - pos.new_pos.y as i8).abs() == 1
+                        && (pos.old_pos.x == pos.new_pos.x))
+                    || ((pos.old_pos.x as i8 - pos.new_pos.x as i8).abs() == 1
+                        && (pos.old_pos.y as i8 - pos.new_pos.y as i8).abs() == 1)
+            }
+            PieceKind::Knight => {
+                ((pos.old_pos.x as i8 - pos.new_pos.x as i8).abs() == 2
                     && (pos.old_pos.y as i8 - pos.new_pos.y as i8).abs() == 1)
+                    || ((pos.old_pos.x as i8 - pos.new_pos.x as i8).abs() == 1
+                        && (pos.old_pos.y as i8 - pos.new_pos.y as i8).abs() == 2)
+            }
+            PieceKind::Pawn => {
+                ((pos.old_pos.y as i8 - pos.new_pos.y as i8).abs() == 1)
+                    && (pos.old_pos.x == pos.new_pos.x)
+                    || ((pos.old_pos.y as i8 - pos.new_pos.y as i8).abs() == 2)
+                        && (pos.old_pos.x == pos.new_pos.x)
             }
             _ => true,
             // PieceKind::Queen => {
@@ -148,12 +157,6 @@ impl PieceKind {
             //     is_path_empty((pos.old_pos.x, pos.old_pos.y), new_position, &pieces)
             //         && (pos.old_pos.x as i8 - pos.new_pos.x as i8).abs()
             //             == (pos.old_pos.y as i8 - pos.new_pos.y as i8).abs()
-            // }
-            // PieceKind::Knight => {
-            //     ((pos.old_pos.x as i8 - pos.new_pos.x as i8).abs() == 2
-            //         && (pos.old_pos.y as i8 - pos.new_pos.y as i8).abs() == 1)
-            //         || ((pos.old_pos.x as i8 - pos.new_pos.x as i8).abs() == 1
-            //             && (pos.old_pos.y as i8 - pos.new_pos.y as i8).abs() == 2)
             // }
             // PieceKind::Rook => {
             //     is_path_empty((pos.old_pos.x, pos.old_pos.y), new_position, &pieces)
