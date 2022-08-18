@@ -141,14 +141,20 @@ impl PieceKind {
             }
             PieceKind::Pawn => match colour {
                 PieceColour::Black => {
-                    ((pos.old_pos.y as i8 - pos.new_pos.y as i8) == -1)
-                        && (pos.old_pos.x == pos.new_pos.x)
+                    is_path_empty(pos, board)
+                        && ((pos.old_pos.y as i8 - pos.new_pos.y as i8) == 1)
+                        && ((pos.old_pos.x as i8 - pos.new_pos.x as i8).abs() == 1)
+                        || ((pos.old_pos.y as i8 - pos.new_pos.y as i8) == -1)
+                            && (pos.old_pos.x == pos.new_pos.x)
                         || ((pos.old_pos.y as i8 - pos.new_pos.y as i8) == -2)
                             && (pos.old_pos.x == pos.new_pos.x)
                 }
                 PieceColour::White => {
-                    ((pos.old_pos.y as i8 - pos.new_pos.y as i8) == 1)
-                        && (pos.old_pos.x == pos.new_pos.x)
+                    is_path_empty(pos, board)
+                        && ((pos.old_pos.y as i8 - pos.new_pos.y as i8) == 1)
+                        && ((pos.old_pos.x as i8 - pos.new_pos.x as i8).abs() == 1)
+                        || ((pos.old_pos.y as i8 - pos.new_pos.y as i8) == 1)
+                            && (pos.old_pos.x == pos.new_pos.x)
                         || ((pos.old_pos.y as i8 - pos.new_pos.y as i8) == 2)
                             && (pos.old_pos.x == pos.new_pos.x)
                 }
