@@ -142,20 +142,26 @@ impl PieceKind {
             PieceKind::Pawn => match colour {
                 PieceColour::Black => {
                     is_path_empty(pos, board)
-                        && ((pos.old_pos.y as i8 - pos.new_pos.y as i8) == 1)
+                        && ((pos.old_pos.y as i8 - pos.new_pos.y as i8) == -1)
                         && ((pos.old_pos.x as i8 - pos.new_pos.x as i8).abs() == 1)
+                        && (board.layout[pos.new_pos.y][pos.new_pos.x].kind().is_some())
                         || ((pos.old_pos.y as i8 - pos.new_pos.y as i8) == -1)
+                            && is_path_empty(pos, board)
                             && (pos.old_pos.x == pos.new_pos.x)
                         || ((pos.old_pos.y as i8 - pos.new_pos.y as i8) == -2)
+                            && is_path_empty(pos, board)
                             && (pos.old_pos.x == pos.new_pos.x)
                 }
                 PieceColour::White => {
                     is_path_empty(pos, board)
                         && ((pos.old_pos.y as i8 - pos.new_pos.y as i8) == 1)
                         && ((pos.old_pos.x as i8 - pos.new_pos.x as i8).abs() == 1)
+                        && (board.layout[pos.new_pos.y][pos.new_pos.x].kind().is_some())
                         || ((pos.old_pos.y as i8 - pos.new_pos.y as i8) == 1)
+                            && is_path_empty(pos, board)
                             && (pos.old_pos.x == pos.new_pos.x)
                         || ((pos.old_pos.y as i8 - pos.new_pos.y as i8) == 2)
+                            && is_path_empty(pos, board)
                             && (pos.old_pos.x == pos.new_pos.x)
                 }
             },
@@ -264,9 +270,10 @@ impl PieceKind {
     }
 }
 
+/// Caclulates if a path is empty or not.
+///
+/// Takes in a reference to the piece move and the board.
 fn is_path_empty(piece_move: &Move, board: &Board) -> bool {
-    let old_square = board.layout[piece_move.old_pos.y][piece_move.old_pos.x];
-    let new_square = board.layout[piece_move.new_pos.y][piece_move.new_pos.x];
     // X (0, 0)
     //
     //
