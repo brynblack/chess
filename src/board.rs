@@ -183,69 +183,7 @@ impl PieceKind {
                 is_path_empty(pos, board)
                     && ((pos.old_pos.x == pos.new_pos.x && pos.old_pos.y != pos.new_pos.y)
                         || (pos.old_pos.y == pos.new_pos.y && pos.old_pos.x != pos.new_pos.x))
-            } // PieceKind::Pawn => {
-              //     if colour == PieceColour::White {
-              //         // Normal move
-              //         if pos.new_pos.x as i8 - pos.old_pos.x as i8 == 1
-              //             && (pos.old_pos.y == pos.new_pos.y)
-              //         {
-              //             if color_of_square(new_position, &pieces).is_none() {
-              //                 return true;
-              //             }
-              //         }
-
-              //         // Move 2 squares
-              //         if pos.old_pos.x == 1
-              //             && pos.new_pos.x as i8 - pos.old_pos.x as i8 == 2
-              //             && (pos.old_pos.y == pos.new_pos.y)
-              //             && is_path_empty((pos.old_pos.x, pos.old_pos.y), new_position, &pieces)
-              //         {
-              //             if color_of_square(new_position, &pieces).is_none() {
-              //                 return true;
-              //             }
-              //         }
-
-              //         // Take piece
-              //         if pos.new_pos.x as i8 - pos.old_pos.x as i8 == 1
-              //             && (pos.old_pos.y as i8 - pos.new_pos.y as i8).abs() == 1
-              //         {
-              //             if color_of_square(new_position, &pieces) == Some(PieceColour::Black) {
-              //                 return true;
-              //             }
-              //         }
-              //     } else {
-              //         // Normal move
-              //         if pos.new_pos.x as i8 - pos.old_pos.x as i8 == -1
-              //             && (pos.old_pos.y == pos.new_pos.y)
-              //         {
-              //             if color_of_square(new_position, &pieces).is_none() {
-              //                 return true;
-              //             }
-              //         }
-
-              //         // Move 2 squares
-              //         if pos.old_pos.x == 6
-              //             && pos.new_pos.x as i8 - pos.old_pos.x as i8 == -2
-              //             && (pos.old_pos.y == pos.new_pos.y)
-              //             && is_path_empty((pos.old_pos.x, pos.old_pos.y), new_position, &pieces)
-              //         {
-              //             if color_of_square(new_position, &pieces).is_none() {
-              //                 return true;
-              //             }
-              //         }
-
-              //         // Take piece
-              //         if pos.new_pos.x as i8 - pos.old_pos.x as i8 == -1
-              //             && (pos.old_pos.y as i8 - pos.new_pos.y as i8).abs() == 1
-              //         {
-              //             if color_of_square(new_position, &pieces) == Some(PieceColour::White) {
-              //                 return true;
-              //             }
-              //         }
-              //     }
-
-              //     false
-              // }
+            }
         }
     }
 
