@@ -188,7 +188,7 @@ fn setup(
                     transform: Transform::from_xyz(
                         x as f32 * SQUARE_SIZE,
                         y as f32 * SQUARE_SIZE,
-                        1.0,
+                        0.5,
                     )
                     .with_scale(Vec3::splat(SQUARE_SIZE)),
                     ..default()

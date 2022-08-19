@@ -126,6 +126,9 @@ fn drag_and_drop(
                 }
             }
 
+            let mut piece_pos = query.get_mut(piece.0).unwrap().1;
+            piece_pos.translation.z = 0.5;
+
             cursor_state.piece = None;
             return;
         }
@@ -140,14 +143,17 @@ fn drag_and_drop(
     }
 
     if mouse_inputs.just_pressed(MouseButton::Left) {
-        query.iter().for_each(|(entity, transform, _, piece)| {
-            if piece.is_some() {
-                let diff = cursor_to_piece_diff(&cursor_state.position, &transform.translation);
-                if diff.length() < (transform.scale.x / 2.0) {
-                    cursor_state.piece = Some((entity, diff));
+        query
+            .iter_mut()
+            .for_each(|(entity, mut transform, _, piece)| {
+                if piece.is_some() {
+                    let diff = cursor_to_piece_diff(&cursor_state.position, &transform.translation);
+                    if diff.length() < (transform.scale.x / 2.0) {
+                        cursor_state.piece = Some((entity, diff));
+                        transform.translation.z = 1.0;
+                    }
                 }
-            }
-        });
+            });
     }
 }
 
