@@ -151,6 +151,7 @@ impl PieceKind {
                             && (pos.old_pos.x == pos.new_pos.x)
                         || ((pos.old_pos.y as i8 - pos.new_pos.y as i8) == -2)
                             && is_path_empty(pos, board)
+                            && (pos.old_pos.y == 1)
                             && (pos.old_pos.x == pos.new_pos.x)
                 }
                 PieceColour::White => {
@@ -164,6 +165,7 @@ impl PieceKind {
                             && (pos.old_pos.x == pos.new_pos.x)
                         || ((pos.old_pos.y as i8 - pos.new_pos.y as i8) == 2)
                             && is_path_empty(pos, board)
+                            && (pos.old_pos.y == 6)
                             && (pos.old_pos.x == pos.new_pos.x)
                 }
             },
