@@ -18,7 +18,7 @@
 //! A module for the creation and management of a chessboard.
 
 use bevy::prelude::Component;
-use std::mem;
+use std::{mem, process};
 
 type BoardLayout = Vec<Vec<Square>>;
 type MoveList = Vec<Move>;
@@ -535,6 +535,20 @@ impl Board {
             &mut self.layout[piece_move.old_pos.y][piece_move.old_pos.x],
             Square::Empty,
         );
+        if let Some(king) = self.layout[piece_move.new_pos.y][piece_move.new_pos.x].kind() {
+            if king == &PieceKind::King {
+                match moved_piece.colour().unwrap() {
+                    PieceColour::Black => {
+                        println!("Black wins!");
+                        process::exit(0);
+                    }
+                    PieceColour::White => {
+                        println!("White wins!");
+                        process::exit(0);
+                    }
+                }
+            }
+        }
         self.layout[piece_move.new_pos.y][piece_move.new_pos.x] = moved_piece;
         self.move_list.push(piece_move);
         self.next_turn();
