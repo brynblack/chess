@@ -1,4 +1,4 @@
-// Copyright (C) 2022  Brynley Llewellyn-Roux and Aryan Jassal
+// Copyright (C) 2023  Brynley Llewellyn-Roux and Aryan Jassal
 //
 // This file is part of chess.
 //
@@ -17,7 +17,7 @@
 
 //! A module for the creation and management of a chessboard.
 
-use bevy::prelude::Component;
+use bevy::prelude::{Component, Resource};
 use std::{mem, process};
 
 type BoardLayout = Vec<Vec<Square>>;
@@ -398,6 +398,7 @@ impl Square {
 ///
 /// let board = Board::default();
 /// ```
+#[derive(Resource)]
 pub struct Board {
     layout: BoardLayout,
     move_list: MoveList,

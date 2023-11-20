@@ -1,5 +1,5 @@
 // chess - A Rust implementation of the famous game Chess.
-// Copyright (C) 2022  Brynley Llewellyn-Roux and Aryan Jassal
+// Copyright (C) 2023  Brynley Llewellyn-Roux and Aryan Jassal
 //
 // This file is part of chess.
 //
@@ -17,7 +17,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use bevy::{
-    diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin},
+    diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin},
     prelude::*,
     sprite::MaterialMesh2dBundle,
     window::{PresentMode, WindowMode},
@@ -40,20 +40,22 @@ struct FpsText;
 
 fn main() {
     App::new()
-        .insert_resource(WindowDescriptor {
-            title: "Chess".to_string(),
-            present_mode: PresentMode::AutoNoVsync,
-            mode: WindowMode::BorderlessFullscreen,
-            ..default()
-        })
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(Window {
+                title: "Chess".to_string(),
+                present_mode: PresentMode::AutoNoVsync,
+                mode: WindowMode::BorderlessFullscreen,
+                ..default()
+            }),
+            ..Default::default()
+        }))
         .init_resource::<Board>()
-        .add_plugins(DefaultPlugins)
-        .add_plugin(DragAndDropPlugin)
-        .add_plugin(UpdateDimensionsPlugin)
-        .add_plugin(FrameTimeDiagnosticsPlugin::default())
-        .add_startup_system(setup)
-        .add_system(update_player_text)
-        .add_system(update_fps_counter)
+        .add_plugins(DragAndDropPlugin)
+        .add_plugins(UpdateDimensionsPlugin)
+        .add_plugins(FrameTimeDiagnosticsPlugin::default())
+        .add_systems(Startup, setup)
+        .add_systems(Update, update_player_text)
+        .add_systems(Update, update_fps_counter)
         .run();
 }
 
@@ -65,7 +67,7 @@ fn setup(
     asset_server: Res<AssetServer>,
 ) {
     commands
-        .spawn_bundle(
+        .spawn(
             TextBundle::from_sections([
                 TextSection::new(
                     "Current player: ",
@@ -81,22 +83,19 @@ fn setup(
                     color: Color::WHITE,
                 }),
             ])
-            .with_text_alignment(TextAlignment::TOP_CENTER)
+            .with_text_alignment(TextAlignment::Center)
             .with_style(Style {
                 align_self: AlignSelf::FlexEnd,
                 position_type: PositionType::Absolute,
-                position: UiRect {
-                    bottom: Val::Px(5.0),
-                    right: Val::Px(15.0),
-                    ..default()
-                },
+                bottom: Val::Px(5.0),
+                right: Val::Px(15.0),
                 ..default()
             }),
         )
         .insert(PlayerText);
 
     commands
-        .spawn_bundle(
+        .spawn(
             TextBundle::from_sections([
                 TextSection::new(
                     "FPS: ",
@@ -112,15 +111,12 @@ fn setup(
                     color: Color::WHITE,
                 }),
             ])
-            .with_text_alignment(TextAlignment::TOP_CENTER)
+            .with_text_alignment(TextAlignment::Center)
             .with_style(Style {
                 align_self: AlignSelf::FlexEnd,
                 position_type: PositionType::Absolute,
-                position: UiRect {
-                    bottom: Val::Px(20.0),
-                    right: Val::Px(15.0),
-                    ..default()
-                },
+                bottom: Val::Px(20.0),
+                right: Val::Px(15.0),
                 ..default()
             }),
         )
@@ -129,7 +125,7 @@ fn setup(
     board.layout().iter().enumerate().for_each(|(y, rank)| {
         rank.iter().enumerate().for_each(|(x, square)| {
             commands
-                .spawn_bundle(MaterialMesh2dBundle {
+                .spawn(MaterialMesh2dBundle {
                     mesh: meshes
                         .add(Mesh::from(shape::Quad {
                             size: Vec2::splat(1.0),
@@ -177,7 +173,7 @@ fn setup(
             };
 
             commands
-                .spawn_bundle(MaterialMesh2dBundle {
+                .spawn(MaterialMesh2dBundle {
                     mesh: meshes
                         .add(Mesh::from(shape::Quad {
                             size: Vec2::splat(1.0),
@@ -193,11 +189,11 @@ fn setup(
                     .with_scale(Vec3::splat(SQUARE_SIZE)),
                     ..default()
                 })
-                .insert_bundle((Position { x, y }, *square));
+                .insert((Position { x, y }, *square));
         })
     });
 
-    commands.spawn_bundle(Camera2dBundle::default());
+    commands.spawn(Camera2dBundle::default());
 }
 
 fn update_player_text(board: Res<Board>, mut query: Query<&mut Text, With<PlayerText>>) {
@@ -206,7 +202,10 @@ fn update_player_text(board: Res<Board>, mut query: Query<&mut Text, With<Player
     }
 }
 
-fn update_fps_counter(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text, With<FpsText>>) {
+fn update_fps_counter(
+    diagnostics: Res<DiagnosticsStore>,
+    mut query: Query<&mut Text, With<FpsText>>,
+) {
     for mut text in &mut query {
         if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
             if let Some(average) = fps.average() {

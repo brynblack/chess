@@ -1,4 +1,4 @@
-// Copyright (C) 2022  Brynley Llewellyn-Roux and Aryan Jassal
+// Copyright (C) 2023  Brynley Llewellyn-Roux and Aryan Jassal
 //
 // This file is part of chess.
 //
@@ -25,7 +25,7 @@ pub struct DragAndDropPlugin;
 
 impl Plugin for DragAndDropPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_system(drag_and_drop);
+        app.add_systems(Update, drag_and_drop);
     }
 }
 
@@ -42,12 +42,13 @@ fn drag_and_drop(
     mouse_inputs: Res<Input<MouseButton>>,
     mut moved_events: EventReader<CursorMoved>,
     mut query: Query<(Entity, &mut Transform, &mut Position, Option<&Square>)>,
-    windows: Res<Windows>,
+    mut windows: Query<&mut Window>,
 ) {
-    if let Some(cursor_event) = moved_events.iter().last() {
-        let window = windows.get_primary().unwrap();
+    if let Some(cursor_event) = moved_events.read().last() {
+        let window = windows.single_mut();
         let window_centre = Vec2::new(window.width() / 2.0, window.height() / 2.0);
-        cursor_state.position = cursor_event.position - window_centre;
+        cursor_state.position.x = cursor_event.position.x - window_centre.x;
+        cursor_state.position.y = -(cursor_event.position.y - window_centre.y);
     };
 
     if cursor_state.piece.is_some() {
@@ -78,7 +79,7 @@ fn drag_and_drop(
                 Some(square) => square,
                 None => {
                     let (_, mut piece_pos, piece_coord, _) = query.get_mut(piece.0).unwrap();
-                    let window = windows.get_primary().unwrap();
+                    let window = windows.single_mut();
                     piece_pos.translation.x = piece_coord.x as f32 * piece_size.x
                         - window.width() / 2.0
                         + (piece_size.x / 2.0);
@@ -99,7 +100,7 @@ fn drag_and_drop(
                 new_pos: *closest_square_coord,
             }) {
                 Ok(_) => {
-                    let window = windows.get_primary().unwrap();
+                    let window = windows.single_mut();
                     let (_, mut piece_pos, mut piece_coord, _) = query.get_mut(piece.0).unwrap();
                     piece_coord.x = boilerplate.x;
                     piece_coord.y = boilerplate.y;
@@ -116,7 +117,7 @@ fn drag_and_drop(
                 Err(err) => {
                     let (_, mut piece_pos, piece_coord, _) = query.get_mut(piece.0).unwrap();
                     eprintln!("{}", err);
-                    let window = windows.get_primary().unwrap();
+                    let window = windows.single_mut();
                     piece_pos.translation.x = piece_coord.x as f32 * piece_size.x
                         - window.width() / 2.0
                         + (piece_size.x / 2.0);

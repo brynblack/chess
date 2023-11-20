@@ -1,4 +1,4 @@
-// Copyright (C) 2022  Brynley Llewellyn-Roux and Aryan Jassal
+// Copyright (C) 2023  Brynley Llewellyn-Roux and Aryan Jassal
 //
 // This file is part of chess.
 //
@@ -25,7 +25,7 @@ pub struct UpdateDimensionsPlugin;
 
 impl Plugin for UpdateDimensionsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(update_dimensions);
+        app.add_systems(Update, update_dimensions);
     }
 }
 
@@ -34,7 +34,7 @@ fn update_dimensions(
     mut query: Query<(&mut Transform, &Position)>,
     mut resize_events: EventReader<WindowResized>,
 ) {
-    resize_events.iter().for_each(|event| {
+    resize_events.read().for_each(|event| {
         let new_size = (event.width / board.layout().len() as f32)
             .min(event.height / board.layout().len() as f32);
 

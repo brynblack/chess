@@ -1,4 +1,4 @@
-// Copyright (C) 2022  Brynley Llewellyn-Roux and Aryan Jassal
+// Copyright (C) 2023  Brynley Llewellyn-Roux and Aryan Jassal
 //
 // This file is part of chess.
 //

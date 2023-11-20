@@ -1,6 +1,6 @@
 [package]
 name = "chess"
-version = "0.8.6"
+version = "0.8.7"
 authors = ["Brynley Llewellyn-Roux", "Aryan Jassal"]
 edition = "2021"
 description = "A Rust implementation of the famous game Chess."
@@ -8,7 +8,13 @@ repository = "https://github.com/brynblack/chess"
 license = "AGPL-3.0-or-later"
 
 [dependencies]
-bevy = { version = "0.8.0", features = ["wayland"] }
+bevy = { version = "0.12.0", features = ["wayland"] }
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
 
 [profile.release]
 codegen-units = 1
