@@ -98,10 +98,16 @@ pub enum PieceColour {
 /// # Examples
 ///
 /// ```
-/// use chess::board::PieceKind;
+/// use chess::board::{Board, Move, PieceColour, PieceKind, Position};
 ///
 /// let piece = PieceKind::Bishop;
-/// println!("{:?}", piece.valid_moves());
+/// let example_move = Move {
+///     old_pos: Position { x: 1, y: 2 },
+///     new_pos: Position { x: 1, y: 3 },
+/// };
+/// let board = Board::default();
+/// println!("Valid: {:?}", piece.is_move_valid(&example_move, &PieceColour::Black, &board));
+/// println!("Value: {}", piece.value());
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PieceKind {
